@@ -5,6 +5,7 @@ from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
 class sample(steganographyAlgorythm):
+
     def __init__(self):
         self.stego_img_path = ""
         self.msg_b_len = 0

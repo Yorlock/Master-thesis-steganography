@@ -8,7 +8,6 @@ def init_instance():
     result_dir_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "results")
     Path(result_dir_path).mkdir(parents=True, exist_ok=True)
 
-    global sample_dir_path
     sample_dir_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "samples")
 
     global carrier_color_dir_path
@@ -58,7 +57,7 @@ def get_secret_mono(sample_number):
 
 def save_encode(algorithm_class, img):
     class_name = type(algorithm_class).__name__
-
+    
     destination_path = os.path.join(result_dir_path, rf"{class_name}")
     Path(destination_path).mkdir(parents=True, exist_ok=True)
 

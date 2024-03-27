@@ -2,7 +2,7 @@ from math import floor
 from skimage import io
 
 from algorithms.steganographyAlgorythm import steganographyAlgorythm
-import algorithms.util as util
+import util
 
 class sample(steganographyAlgorythm):
     def __init__(self):

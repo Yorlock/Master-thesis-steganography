@@ -4,7 +4,7 @@ import numpy as np
 from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
-class LSB(steganographyAlgorythm):
+class LSB_EOM(steganographyAlgorythm):
     def __init__(self, end_msg="$t3g0"):
         self.stego_img_path = ""
         self.msg_extension = ".txt"

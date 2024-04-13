@@ -9,16 +9,40 @@ class sample(steganographyAlgorythm):
     def __init__(self):
         self.stego_img_path = ""
         self.msg_b_len = 0
+        self.msg_extension = ".txt"
+        self.stego_extension = ".png"
+
+    @property
+    def msg_extension(self):
+        return self._msg_extension
+    
+    @msg_extension.setter
+    def msg_extension(self, value):
+        self._msg_extension = value
+
+    @property
+    def stego_extension(self):
+        return self._stego_extension
+    
+    @stego_extension.setter
+    def stego_extension(self, value):
+        self._stego_extension = value
 
     def encode(self, img, msg):
         msg_b = self.__text_to_bites__(msg)
         stego_img = self.__hide_text__(img, msg_b)
-        self.stego_img_path = util.save_encode(self, stego_img, 1)
+        self.stego_img_path = util.get_encode_path(self)
+        io.imsave(self.stego_img_path, stego_img)
 
     def decode(self):
         found_text = self.__find_text__(self.stego_img_path)
         plain_text = self.__bites_to_text__(found_text)
-        util.save_decode(self, plain_text)
+        
+        destination_path = util.get_decode_path(self)
+        
+        destination_file = open(destination_path, "w")
+        destination_file.write(plain_text)
+        destination_file.close()
 
     def __text_to_bites__(self, fileName):
         file = open(fileName,'r')

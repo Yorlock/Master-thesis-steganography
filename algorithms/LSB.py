@@ -4,10 +4,27 @@ import numpy as np
 from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
-
 class LSB(steganographyAlgorythm):
     def __init__(self):
         self.stego_img_path = ""
+        self.msg_extension = ".txt"
+        self.stego_extension = ".png"
+
+    @property
+    def msg_extension(self):
+        return self._msg_extension
+    
+    @msg_extension.setter
+    def msg_extension(self, value):
+        self._msg_extension = value
+
+    @property
+    def stego_extension(self):
+        return self._stego_extension
+    
+    @stego_extension.setter
+    def stego_extension(self, value):
+        self._stego_extension = value
 
     def encode(self, img_path, msg_path):
         img = Image.open(img_path, 'r')
@@ -40,10 +57,10 @@ class LSB(steganographyAlgorythm):
 
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
-        #enc_img.save(dest)
         print("Image Encoded Successfully")
 
-        self.stego_img_path = util.save_encode(self, enc_img, 2)
+        self.stego_img_path = util.get_encode_path(self)
+        enc_img.save(self.stego_img_path)
 
     def decode(self):
 
@@ -74,4 +91,7 @@ class LSB(steganographyAlgorythm):
         else:
             print("No Hidden Message Found")
 
-        util.save_decode(self, message)
+        destination_path = util.get_decode_path(self)
+        destination_file = open(destination_path, "w")
+        destination_file.write(message)
+        destination_file.close()

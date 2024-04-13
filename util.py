@@ -76,3 +76,9 @@ def get_decode_path(self):
     destination_path = os.path.join(destination_path, rf"message{number_files}{self.msg_extension}")
 
     return destination_path
+
+def check_error(self):
+    class_name = type(self).__name__
+    print(rf"{class_name}: {self.is_success}")
+    if (self.is_success):
+        print(rf"{class_name}: {self.error_msg}")

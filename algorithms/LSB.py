@@ -9,6 +9,24 @@ class LSB(steganographyAlgorythm):
         self.stego_img_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
+        self.is_success = False
+        self.error_msg = ""
+
+    @property
+    def is_success(self):
+        return self._is_success
+    
+    @is_success.setter
+    def is_success(self, value):
+        self._is_success = value
+
+    @property
+    def error_msg(self):
+        return self._error_msg
+    
+    @error_msg.setter
+    def error_msg(self, value):
+        self._error_msg = value
 
     @property
     def msg_extension(self):
@@ -25,6 +43,10 @@ class LSB(steganographyAlgorythm):
     @stego_extension.setter
     def stego_extension(self, value):
         self._stego_extension = value
+
+    def reset_params(self):
+        self.is_success = False
+        self.error_msg = ""
 
     def encode(self, img_path, msg_path):
         img = Image.open(img_path, 'r')
@@ -46,7 +68,9 @@ class LSB(steganographyAlgorythm):
         req_pixels = len(b_message)
 
         if req_pixels > total_pixels:
-            print("ERROR: Need larger file size")
+            self.is_success = False
+            self.error_msg = "ERROR: Need larger file size\n"
+            return
         else:
             index=0
             for p in range(total_pixels):
@@ -57,13 +81,14 @@ class LSB(steganographyAlgorythm):
 
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
-        print("Image Encoded Successfully")
 
         self.stego_img_path = util.get_encode_path(self)
         enc_img.save(self.stego_img_path)
 
-    def decode(self):
+        self.is_success = True
 
+    def decode(self):
+        self.reset_params()
         img = Image.open(self.stego_img_path, 'r')
         array = np.array(list(img.getdata()))
 
@@ -86,12 +111,14 @@ class LSB(steganographyAlgorythm):
                 break
             else:
                 message += chr(int(hidden_bits[i], 2))
-        if "$t3g0" in message:
-            print("Hidden Message:", message[:-5])
-        else:
-            print("No Hidden Message Found")
+        if "$t3g0" not in message:
+            self.is_success = False
+            self.error_msg = "No Hidden Message Found\n"
+            return
 
         destination_path = util.get_decode_path(self)
         destination_file = open(destination_path, "w")
         destination_file.write(message)
         destination_file.close()
+
+        self.is_success = True

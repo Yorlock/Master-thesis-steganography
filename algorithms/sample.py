@@ -11,6 +11,24 @@ class sample(steganographyAlgorythm):
         self.msg_b_len = 0
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
+        self.is_success = False
+        self.error_msg = ""
+
+    @property
+    def is_success(self):
+        return self._is_success
+    
+    @is_success.setter
+    def is_success(self, value):
+        self._is_success = value
+
+    @property
+    def error_msg(self):
+        return self._error_msg
+    
+    @error_msg.setter
+    def error_msg(self, value):
+        self._error_msg = value
 
     @property
     def msg_extension(self):
@@ -28,13 +46,20 @@ class sample(steganographyAlgorythm):
     def stego_extension(self, value):
         self._stego_extension = value
 
+    def reset_params(self):
+        self.is_success = False
+        self.error_msg = ""
+
     def encode(self, img, msg):
         msg_b = self.__text_to_bites__(msg)
         stego_img = self.__hide_text__(img, msg_b)
         self.stego_img_path = util.get_encode_path(self)
         io.imsave(self.stego_img_path, stego_img)
 
+        self.is_success = True
+
     def decode(self):
+        self.reset_params()
         found_text = self.__find_text__(self.stego_img_path)
         plain_text = self.__bites_to_text__(found_text)
         
@@ -43,6 +68,8 @@ class sample(steganographyAlgorythm):
         destination_file = open(destination_path, "w")
         destination_file.write(plain_text)
         destination_file.close()
+
+        self.is_success = True
 
     def __text_to_bites__(self, fileName):
         file = open(fileName,'r')
@@ -57,7 +84,7 @@ class sample(steganographyAlgorythm):
         h, w, _ = img.shape
         maxSizeOfSecretText = int(floor(h * w * 3))
         if self.msg_b_len > maxSizeOfSecretText:
-            print(f"Text is too large {msg_b}. Max size is {maxSizeOfSecretText}. Cutting text")
+            self.error_msg += f"Text is too large {msg_b}. Max size is {maxSizeOfSecretText}. Cutting text\n" 
             secretText = secretText[:maxSizeOfSecretText]
 
         index = 0

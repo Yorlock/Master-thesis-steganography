@@ -55,33 +55,30 @@ def get_secret_msg(sample_number):
 def get_secret_mono(sample_number):
     return os.path.join(secret_mono_dir_path, rf"sample{str(sample_number)}.png")
 
-def save_encode(algorithm_class, img):
-    class_name = type(algorithm_class).__name__
+def get_encode_path(self):
+    class_name = type(self).__name__
     
     destination_path = os.path.join(result_dir_path, rf"{class_name}")
     Path(destination_path).mkdir(parents=True, exist_ok=True)
 
     number_files = len(glob.glob(destination_path + '\stego*')) + 1
-    destination_path = os.path.join(destination_path, rf"stego{number_files}.png")
+    destination_path = os.path.join(destination_path, rf"stego{number_files}{self.stego_extension}")
 
-    io.imsave(destination_path, img)
     return destination_path
 
-def save_decode(algorithm_class, msg):
-    class_name = type(algorithm_class).__name__
+def get_decode_path(self):
+    class_name = type(self).__name__
 
     destination_path = os.path.join(result_dir_path, rf"{class_name}")
     Path(destination_path).mkdir(parents=True, exist_ok=True)
-
+    
     number_files = len(glob.glob(destination_path + '\message*')) + 1
-
-    if type(msg) == str:
-        destination_path = os.path.join(destination_path, rf"message{number_files}.txt")
-        destination_file = open(destination_path, "w")
-        destination_file.write(msg)
-        destination_file.close()
-    else:
-        destination_path = os.path.join(destination_path, rf"message{number_files}.png")
-        io.imsave(destination_path, msg)
+    destination_path = os.path.join(destination_path, rf"message{number_files}{self.msg_extension}")
 
     return destination_path
+
+def check_error(self):
+    class_name = type(self).__name__
+    print(rf"{class_name}: {self.is_success}")
+    if not self.is_success:
+        print(rf"{class_name}: {self.error_msg}")

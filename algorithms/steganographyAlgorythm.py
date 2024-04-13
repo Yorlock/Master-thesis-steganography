@@ -34,6 +34,14 @@ class steganographyAlgorythm(ABC):
     def stego_extension(self, value):
         pass
     
+    @property
+    def stego_img_path(self):
+        pass
+    
+    @stego_img_path.setter
+    def stego_img_path(self, value):
+        pass
+
     @abstractmethod
     def reset_params(self):
         pass

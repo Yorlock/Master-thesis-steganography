@@ -12,7 +12,7 @@ def example1():
 
 # define multiple objects and run them in the provided sample
 def example2():
-    algorithms = [sample(), LSB()]
+    algorithms = [sample(), LSB(end_msg="G$:+.3")]
     for algorithm in algorithms:
         algorithm.encode(util.get_carrier_color(2), util.get_secret_msg(1))
         util.check_error(algorithm)
@@ -32,5 +32,5 @@ def example3():
 if __name__ == '__main__':
     util.init_instance()
     util.clean_result()
-
+    
     example2()

@@ -5,12 +5,13 @@ from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
 class LSB(steganographyAlgorythm):
-    def __init__(self):
+    def __init__(self, end_msg="$t3g0"):
         self.stego_img_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False
         self.error_msg = ""
+        self.end_msg = end_msg
 
     @property
     def is_success(self):
@@ -44,6 +45,14 @@ class LSB(steganographyAlgorythm):
     def stego_extension(self, value):
         self._stego_extension = value
 
+    @property
+    def stego_img_path(self):
+        return self._stego_img_path
+    
+    @stego_img_path.setter
+    def stego_img_path(self, value):
+        self._stego_img_path = value
+
     def reset_params(self):
         self.is_success = False
         self.error_msg = ""
@@ -63,7 +72,7 @@ class LSB(steganographyAlgorythm):
             n = 4
         total_pixels = array.size//n
 
-        message += "$t3g0"
+        message += self.end_msg
         b_message = ''.join([format(ord(i), "08b") for i in message])
         req_pixels = len(b_message)
 
@@ -76,7 +85,8 @@ class LSB(steganographyAlgorythm):
             for p in range(total_pixels):
                 for q in range(0, 3):
                     if index < req_pixels:
-                        array[p][q] = int(bin(array[p][q])[2:9] + b_message[index], 2)
+                        new_value = (array[p][q] & 254) + int(b_message[index])
+                        array[p][q] = new_value
                         index += 1
 
         array=array.reshape(height, width, n)
@@ -101,24 +111,24 @@ class LSB(steganographyAlgorythm):
         hidden_bits = ""
         for p in range(total_pixels):
             for q in range(0, 3):
-                hidden_bits += (bin(array[p][q])[2:][-1])
+                hidden_bits += str(array[p][q] % 2)
 
         hidden_bits = [hidden_bits[i:i+8] for i in range(0, len(hidden_bits), 8)]
 
         message = ""
         for i in range(len(hidden_bits)):
-            if message[-5:] == "$t3g0":
+            if message[-len(self.end_msg):] == self.end_msg:
                 break
             else:
                 message += chr(int(hidden_bits[i], 2))
-        if "$t3g0" not in message:
+        if self.end_msg not in message:
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"
             return
 
         destination_path = util.get_decode_path(self)
         destination_file = open(destination_path, "w")
-        destination_file.write(message)
+        destination_file.write(message[:-len(self.end_msg)])
         destination_file.close()
 
         self.is_success = True

@@ -46,13 +46,21 @@ class sample(steganographyAlgorythm):
     def stego_extension(self, value):
         self._stego_extension = value
 
+    @property
+    def stego_img_path(self):
+        return self._stego_img_path
+    
+    @stego_img_path.setter
+    def stego_img_path(self, value):
+        self._stego_img_path = value
+
     def reset_params(self):
         self.is_success = False
         self.error_msg = ""
 
-    def encode(self, img, msg):
-        msg_b = self.__text_to_bites__(msg)
-        stego_img = self.__hide_text__(img, msg_b)
+    def encode(self, img_path, msg_path):
+        msg_b = self.__text_to_bites__(msg_path)
+        stego_img = self.__hide_text__(img_path, msg_b)
         self.stego_img_path = util.get_encode_path(self)
         io.imsave(self.stego_img_path, stego_img)
 

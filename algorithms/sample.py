@@ -11,22 +11,22 @@ class sample(steganographyAlgorythm):
         self.msg_b_len = 0
 
     def encode(self, img, msg):
-        msg_b = self.__text_to_bites(msg)
-        stego_img = self.__hide_text(img, msg_b)
-        self.stego_img_path = util.save_encode(self, stego_img)
+        msg_b = self.__text_to_bites__(msg)
+        stego_img = self.__hide_text__(img, msg_b)
+        self.stego_img_path = util.save_encode(self, stego_img, 1)
 
     def decode(self):
-        found_text = self.__find_text(self.stego_img_path)
-        plain_text = self.__bites_to_text(found_text)
+        found_text = self.__find_text__(self.stego_img_path)
+        plain_text = self.__bites_to_text__(found_text)
         util.save_decode(self, plain_text)
 
-    def __text_to_bites(self, fileName):
+    def __text_to_bites__(self, fileName):
         file = open(fileName,'r')
         dataText = file.read()
         dataTextToBites = ''.join(format(ord(i), '08b') for i in str(dataText))
         return dataTextToBites
 
-    def __hide_text(self, img_path, msg_b):
+    def __hide_text__(self, img_path, msg_b):
         self.msg_b_len = len(msg_b)
 
         img = io.imread(img_path)
@@ -48,13 +48,13 @@ class sample(steganographyAlgorythm):
                         return img
         return img
 
-    def __find_text(self, img_path):
+    def __find_text__(self, img_path):
         img = io.imread(img_path)
         h, w, _ = img.shape
-        foundTextInBin = self.__find_text_in_img(img, h, w)
+        foundTextInBin = self.__find_text_in_img__(img, h, w)
         return bytes(foundTextInBin, 'utf-8')
 
-    def __bites_to_text(self, bit_text):
+    def __bites_to_text__(self, bit_text):
         plaintext = ""
         for i in range(0, len(bit_text), 8):
             binary = bit_text[i:i+8]
@@ -62,7 +62,7 @@ class sample(steganographyAlgorythm):
             plaintext += chr(ascii)
         return plaintext
 
-    def __find_text_in_img(self, img, h, w):
+    def __find_text_in_img__(self, img, h, w):
         found = 0
         foundText = ''
         for i in range(h):

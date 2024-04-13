@@ -1,9 +1,10 @@
 from algorithms.sample import sample
+from algorithms.LSB import LSB
 import util
 
 # define object and run it  in the provided sample
 def example1():
-    lsb = sample()
+    lsb = LSB()
     lsb.encode(util.get_carrier_color(2), util.get_secret_msg(1))
     lsb.decode()
 
@@ -25,5 +26,5 @@ def example3():
 if __name__ == '__main__':
     util.init_instance()
     util.clean_result()
-
+    
     example2()

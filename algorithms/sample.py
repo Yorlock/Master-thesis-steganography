@@ -59,7 +59,7 @@ class sample(steganographyAlgorythm):
         self.error_msg = ""
 
     def encode(self, img_path, msg_path):
-        msg_b = self.__text_to_bites__(msg_path)
+        msg_b = self.__text_to_bits__(msg_path)
         stego_img = self.__hide_text__(img_path, msg_b)
         self.stego_img_path = util.get_encode_path(self)
         io.imsave(self.stego_img_path, stego_img)
@@ -69,7 +69,7 @@ class sample(steganographyAlgorythm):
     def decode(self):
         self.reset_params()
         found_text = self.__find_text__(self.stego_img_path)
-        plain_text = self.__bites_to_text__(found_text)
+        plain_text = self.__bits_to_text__(found_text)
         
         destination_path = util.get_decode_path(self)
         
@@ -79,22 +79,21 @@ class sample(steganographyAlgorythm):
 
         self.is_success = True
 
-    def __text_to_bites__(self, fileName):
+    def __text_to_bits__(self, fileName):
         file = open(fileName,'r')
         dataText = file.read()
-        dataTextToBites = ''.join(format(ord(i), '08b') for i in str(dataText))
-        return dataTextToBites
+        dataTextToBits = ''.join(format(ord(i), '08b') for i in str(dataText))
+        return dataTextToBits
 
     def __hide_text__(self, img_path, msg_b):
-        self.msg_b_len = len(msg_b)
-
         img = io.imread(img_path)
         h, w, _ = img.shape
         maxSizeOfSecretText = int(floor(h * w * 3))
-        if self.msg_b_len > maxSizeOfSecretText:
-            self.error_msg += f"Text is too large {msg_b}. Max size is {maxSizeOfSecretText}. Cutting text\n" 
-            secretText = secretText[:maxSizeOfSecretText]
+        if len(msg_b) > maxSizeOfSecretText:
+            self.error_msg += f"Text is too large {self.msg_b_len}. Max size is {maxSizeOfSecretText}. Cutting text\n" 
+            msg_b = msg_b[:maxSizeOfSecretText]
 
+        self.msg_b_len = len(msg_b)
         index = 0
         for i in range(h):
             for j in range(w):
@@ -113,7 +112,7 @@ class sample(steganographyAlgorythm):
         foundTextInBin = self.__find_text_in_img__(img, h, w)
         return bytes(foundTextInBin, 'utf-8')
 
-    def __bites_to_text__(self, bit_text):
+    def __bits_to_text__(self, bit_text):
         plaintext = ""
         for i in range(0, len(bit_text), 8):
             binary = bit_text[i:i+8]

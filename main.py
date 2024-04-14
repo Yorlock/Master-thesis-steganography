@@ -22,9 +22,9 @@ def example2():
 
 # define multiple objects and run them in the specified sample range
 def example3():
-    algorithms = [sample(), LSB_EOM(), LSB_SOM()]
+    algorithms = [sample(), LSB_EOM(end_msg="G$:+.3"), LSB_SOM()]
     for algorithm in algorithms:
-        for i in range(1,4):
+        for i in range(1,5):
             algorithm.encode(util.get_carrier_color(i), util.get_secret_msg(i))
             util.check_error(algorithm)
             algorithm.decode()

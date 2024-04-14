@@ -73,23 +73,24 @@ class LSB_SOM(steganographyAlgorythm):
         total_pixels = array.size//n
         b_message = ''.join([format(ord(i), "08b") for i in message])
         
-        SOM_bit_len = math.ceil(math.log2(total_pixels))
+        SOM_bit_len = math.ceil(math.log2(total_pixels * 3))
         SOM_bit_value = len(b_message)
         SOM = bin(SOM_bit_value)[2:]
         padding_length = SOM_bit_len - len(SOM)
         SOM = '0'*padding_length + SOM
-        b_message = SOM + b_message
-        req_pixels = len(b_message)
 
-        if req_pixels > total_pixels:
+        b_message = SOM + b_message
+        req_bits = len(b_message)
+
+        if req_bits > total_pixels * 3:
             self.is_success = False
-            self.error_msg = "ERROR: Need larger file size\n"
+            self.error_msg = "ERROR: Need larger file size."
             return
         else:
             index=0
             for p in range(total_pixels):
                 for q in range(0, 3):
-                    if index < req_pixels:
+                    if index < req_bits:
                         new_value = (array[p][q] & 254) + int(b_message[index])
                         array[p][q] = new_value
                         index += 1
@@ -103,6 +104,10 @@ class LSB_SOM(steganographyAlgorythm):
         self.is_success = True
 
     def decode(self):
+        if not self.is_success:
+            self.error_msg = "Encode failed"
+            return
+
         self.reset_params()
         img = Image.open(self.stego_img_path, 'r')
         array = np.array(list(img.getdata()))
@@ -113,15 +118,11 @@ class LSB_SOM(steganographyAlgorythm):
             n = 4
 
         total_pixels = array.size//n
-        msg_size_b, start_bit, SOM_pixel_len = self.__calculate_SOM__(total_pixels, array)
-        used_pixels = int(msg_size_b, 2) // 3 + 1
-        hidden_bits = ""
+        msg_size_b, SOM_bit_len = self.__calculate_SOM__(total_pixels, array)
+        used_bits = int(msg_size_b, 2)
 
-        for p in range(0, used_pixels + SOM_pixel_len):
-            for q in range(0, 3):
-                hidden_bits += str(array[p][q] % 2)
-
-        hidden_bits = hidden_bits[start_bit:] 
+        hidden_bits = self.__get_hidded_bits__(total_pixels, used_bits + SOM_bit_len, array)
+        hidden_bits = hidden_bits[SOM_bit_len:]
         hidden_bits = [hidden_bits[i:i+8] for i in range(0, len(hidden_bits), 8)]
         if len(hidden_bits[-1]) != 8:
             hidden_bits = hidden_bits[:-1]
@@ -138,14 +139,21 @@ class LSB_SOM(steganographyAlgorythm):
         self.is_success = True
 
     def __calculate_SOM__(self, total_pixels, array):
-        SOM_pixel_len = math.ceil(math.log2(total_pixels)) // 3 + 1
-        SOM_bit_len = math.ceil(math.log2(total_pixels))
+        SOM_bit_len = math.ceil(math.log2(total_pixels * 3))
         loop_counter = SOM_bit_len
         msg_size_b = ""
-        for p in range(SOM_pixel_len):
+        for p in range(total_pixels):
             for q in range(0, 3):
                 msg_size_b += str(array[p][q] % 2)
                 loop_counter -= 1
                 if loop_counter == 0:
-                    return msg_size_b, SOM_bit_len, SOM_pixel_len
+                    return msg_size_b, SOM_bit_len
         
+    def __get_hidded_bits__(self, total_pixels, loop_counter, array):
+        hidden_bits = ""
+        for p in range(total_pixels):
+            for q in range(0, 3):
+                hidden_bits += str(array[p][q] % 2)
+                loop_counter -= 1
+                if loop_counter == 0:
+                    return hidden_bits

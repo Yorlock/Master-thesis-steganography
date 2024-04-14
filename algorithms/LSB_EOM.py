@@ -74,17 +74,17 @@ class LSB_EOM(steganographyAlgorythm):
 
         message += self.end_msg
         b_message = ''.join([format(ord(i), "08b") for i in message])
-        req_pixels = len(b_message)
+        req_bits = len(b_message)
 
-        if req_pixels > total_pixels:
+        if req_bits > total_pixels * 3:
             self.is_success = False
-            self.error_msg = "ERROR: Need larger file size\n"
+            self.error_msg = "ERROR: Need larger file size."
             return
         else:
             index=0
             for p in range(total_pixels):
                 for q in range(0, 3):
-                    if index < req_pixels:
+                    if index < req_bits:
                         new_value = (array[p][q] & 254) + int(b_message[index])
                         array[p][q] = new_value
                         index += 1
@@ -98,6 +98,10 @@ class LSB_EOM(steganographyAlgorythm):
         self.is_success = True
 
     def decode(self):
+        if not self.is_success:
+            self.error_msg = "Encode failed"
+            return
+
         self.reset_params()
         img = Image.open(self.stego_img_path, 'r')
         array = np.array(list(img.getdata()))

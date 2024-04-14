@@ -124,8 +124,6 @@ class LSB_SOM(steganographyAlgorythm):
         hidden_bits = self.__get_hidded_bits__(total_pixels, used_bits + SOM_bit_len, array)
         hidden_bits = hidden_bits[SOM_bit_len:]
         hidden_bits = [hidden_bits[i:i+8] for i in range(0, len(hidden_bits), 8)]
-        if len(hidden_bits[-1]) != 8:
-            hidden_bits = hidden_bits[:-1]
 
         message = ""
         for i in range(len(hidden_bits)):

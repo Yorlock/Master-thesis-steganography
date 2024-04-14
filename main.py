@@ -13,7 +13,7 @@ def example1():
 
 # define multiple objects and run them in the provided sample
 def example2():
-    algorithms = [sample(), LSB_EOM(end_msg="G$:+.3", k=1), LSB_SOM()]
+    algorithms = [sample(), LSB_EOM(end_msg="G$:+.3", k=1), LSB_SOM(k=1)]
     for algorithm in algorithms:
         algorithm.encode(util.get_carrier_color(2), util.get_secret_msg(1))
         util.check_error(algorithm)
@@ -33,5 +33,6 @@ def example3():
 if __name__ == '__main__':
     util.init_instance()
     util.clean_result()
+    #util.clean_all()
 
     example2()

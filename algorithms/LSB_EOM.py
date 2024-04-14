@@ -11,11 +11,11 @@ class LSB_EOM(steganographyAlgorythm):
         self.stego_extension = ".png"
         self.is_success = False
         self.error_msg = ""
-        if k > 8:
-            k = 7
-            error_msg += "The value of parameter k has been changed to 7."
         self.k = k
         self.end_msg = end_msg
+        if k > 8:
+            self.k = 7
+            self.error_msg += "The value of parameter k has been changed to 7."
 
     @property
     def is_success(self):

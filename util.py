@@ -80,5 +80,5 @@ def get_decode_path(self):
 def check_error(self):
     class_name = type(self).__name__
     print(rf"{class_name}: {self.is_success}")
-    if not self.is_success:
+    if self.error_msg != "":
         print(rf"{class_name}: {self.error_msg}")

@@ -5,13 +5,17 @@ from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
 class LSB_EOM(steganographyAlgorythm):
-    def __init__(self, end_msg="$t3g0"):
+    def __init__(self, end_msg="$t3g0", k=1):
         self.stego_img_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False
         self.error_msg = ""
+        self.k = k
         self.end_msg = end_msg
+        if k > 8:
+            self.k = 7
+            self.error_msg += "The value of parameter k has been changed to 7."
 
     @property
     def is_success(self):
@@ -76,18 +80,12 @@ class LSB_EOM(steganographyAlgorythm):
         b_message = ''.join([format(ord(i), "08b") for i in message])
         req_bits = len(b_message)
 
-        if req_bits > total_pixels * 3:
+        if req_bits > total_pixels * 3 * self.k:
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return
         else:
-            index=0
-            for p in range(total_pixels):
-                for q in range(0, 3):
-                    if index < req_bits:
-                        new_value = (array[p][q] & 254) + int(b_message[index])
-                        array[p][q] = new_value
-                        index += 1
+            array = self.__hide_text__(total_pixels, req_bits, array, b_message)
 
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
@@ -115,7 +113,8 @@ class LSB_EOM(steganographyAlgorythm):
         hidden_bits = ""
         for p in range(total_pixels):
             for q in range(0, 3):
-                hidden_bits += str(array[p][q] % 2)
+                for bit in range(self.k):
+                    hidden_bits += str(self.__get_bit_value__(array[p][q], bit))
 
         hidden_bits = [hidden_bits[i:i+8] for i in range(0, len(hidden_bits), 8)]
 
@@ -136,3 +135,31 @@ class LSB_EOM(steganographyAlgorythm):
         destination_file.close()
 
         self.is_success = True
+
+    def __hide_text__(self, total_pixels, req_bits, array, b_message):
+        index=0
+        for p in range(total_pixels):
+            for q in range(0, 3):
+                AND_value = 255
+                BIT_value = 1
+                new_value = 0
+                for bit in range(self.k):
+                    if index < req_bits:
+                        AND_value -= BIT_value
+                        new_value += int(b_message[index]) * BIT_value
+                        BIT_value *= 2
+                        index += 1
+                    else:
+                        array[p][q] = (array[p][q] & AND_value) + new_value
+                        return array
+                    
+                array[p][q] = (array[p][q] & AND_value) + new_value
+    
+    def __get_bit_value__(self, number, n):
+        # Create a mask with a 1 at the nth position
+        mask = 1 << n
+
+        # Perform bitwise AND operation with the number and mask
+        # If the result is non-zero, the bit at position n is 1, otherwise, it's 0
+        return (number & mask) >> n
+    

@@ -6,11 +6,12 @@ from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
 class BPCS(steganographyAlgorythm):
-    def __init__(self, alpha=0.45):
+    def __init__(self, alpha=0.45, save_bitplates=False):
         self.stego_img_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.alpha = alpha
+        self.save_bitplates = save_bitplates
         self.is_success = False
         self.error_msg = ""
 
@@ -60,8 +61,11 @@ class BPCS(steganographyAlgorythm):
 
     def encode(self, img_path, msg_path):
         self.stego_img_path = util.get_encode_path(self)
-        #bpcs.capacity(img_path, self.alpha)
-        bpcs.encode(img_path, msg_path, self.stego_img_path, self.alpha)
+        bitplatedir=''
+        if self.save_bitplates:
+            bitplatedir = util.get_encode_path_dir(self)
+
+        bpcs.encode(img_path, msg_path, self.stego_img_path, self.alpha, outbitplatedir=bitplatedir)
         self.is_success = True
 
     def decode(self):

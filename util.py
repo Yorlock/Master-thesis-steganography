@@ -30,14 +30,26 @@ def clean_result():
     for dir in dirs:
         files = glob.glob(dir + '/*')
         for file in files:
-            os.remove(file)
+            if os.path.isdir(file):
+                insidedir = glob.glob(file + '/*')
+                for f in insidedir:
+                    os.remove(f)
+                os.rmdir(file)
+            else:
+                os.remove(file)
 
 def clean_all():
     dirs = glob.glob(result_dir_path + '/*')
     for dir in dirs:
         files = glob.glob(dir + '/*')
         for file in files:
-            os.remove(file)
+            if os.path.isdir(file):
+                insidedir = glob.glob(file + '/*')
+                for f in insidedir:
+                    os.remove(f)
+                os.rmdir(file)
+            else:
+                os.remove(file)
         os.rmdir(dir)
 
 def get_carrier_color(sample_number):
@@ -63,6 +75,19 @@ def get_encode_path(self):
 
     number_files = len(glob.glob(destination_path + '\stego*')) + 1
     destination_path = os.path.join(destination_path, rf"stego{number_files}{self.stego_extension}")
+
+    return destination_path
+
+def get_encode_path_dir(self):
+    if self.stego_img_path == '':
+        raise Exception('No stego image path')
+
+    class_name = type(self).__name__
+    dirname = os.path.splitext(self.stego_img_path)[0]
+    destination_path = os.path.join(result_dir_path, rf"{class_name}")
+    Path(destination_path).mkdir(parents=True, exist_ok=True)
+
+    destination_path = os.path.join(destination_path, dirname)
 
     return destination_path
 

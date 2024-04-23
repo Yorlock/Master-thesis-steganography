@@ -8,17 +8,28 @@ from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
 class LSB_SINE(steganographyAlgorythm):
-    def __init__(self, sine_phase=1.0, end_msg="$t3g0"):
+    def __init__(self, end_msg="$t3g0", round_accuracy=2, sine_phase=1.0):
         self.stego_img_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False
         self.error_msg = ""
         self.end_msg = end_msg
+        if not isinstance(round_accuracy, int):
+            self.round_accuracy = 2
+            self.error_msg += "Parameter round_accuracy was set to 2."
+        elif round_accuracy < 1 or round_accuracy > 10:
+            self.round_accuracy = 2
+            self.error_msg += "Parameter round_accuracy was set to 2."
+        else:
+            self.round_accuracy = round_accuracy
+        
         if not isinstance(sine_phase, float):
             self.sine_value = 1.0
+            self.error_msg += "Parameter sine_value was set to 1.0."
         elif sine_phase > 1.0 or sine_phase < -1.0:
             self.sine_value = 1.0
+            self.error_msg += "Parameter sine_value was set to 1.0."
         else:
             self.sine_value = sine_phase
 
@@ -137,7 +148,7 @@ class LSB_SINE(steganographyAlgorythm):
         pixel_index = 0
         for pixel_index in range(total_pixels):
             j = math.sin((pixel_index * 2 * math.pi / w + 1) * (h - 1) / 2)
-            if round(j, 2) != self.sine_value:
+            if round(j, self.round_accuracy) != self.sine_value:
                 continue
 
             for color in range(3):
@@ -181,7 +192,7 @@ class LSB_SINE(steganographyAlgorythm):
         available_pixels_list = []
         for pixel_index in range(total_pixels):
             j = math.sin((pixel_index * 2 * math.pi / w + 1) * (h - 1) / 2)
-            if round(j, 2) != self.sine_value:
+            if round(j, self.round_accuracy) != self.sine_value:
                 pixel_index += 1
                 continue
 

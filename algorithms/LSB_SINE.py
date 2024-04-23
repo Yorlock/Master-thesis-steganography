@@ -1,21 +1,26 @@
 from PIL import Image
+from util import AESCipher
 import numpy as np
+import math
+import base64
 
 from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
-class LSB_EOM(steganographyAlgorythm):
-    def __init__(self, end_msg="$t3g0", k=1):
+class LSB_SINE(steganographyAlgorythm):
+    def __init__(self, sine_phase=1.0, end_msg="$t3g0"):
         self.stego_img_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False
         self.error_msg = ""
-        self.k = k
         self.end_msg = end_msg
-        if k > 8:
-            self.k = 7
-            self.error_msg += "The value of parameter k has been changed to 7."
+        if not isinstance(sine_phase, float):
+            self.sine_value = 1.0
+        elif sine_phase > 1.0 or sine_phase < -1.0:
+            self.sine_value = 1.0
+        else:
+            self.sine_value = sine_phase
 
     @property
     def is_success(self):
@@ -63,7 +68,7 @@ class LSB_EOM(steganographyAlgorythm):
 
     def encode(self, img_path, msg_path):
         img = Image.open(img_path, 'r')
-        width, height = img.size
+        w, h = img.size
         array = np.array(list(img.getdata()))
         
         msg_file = open(msg_path,'r')
@@ -74,22 +79,39 @@ class LSB_EOM(steganographyAlgorythm):
             n = 3
         elif img.mode == 'RGBA':
             n = 4
-        total_pixels = array.size//n
 
+        total_pixels = array.size//n
         message += self.end_msg
         b_message = ''.join([format(ord(i), "08b") for i in message])
         req_bits = len(b_message)
-
-        if req_bits > total_pixels * 3 * self.k:
+        available_bites, available_pixels_list = self.__calculate_available_bites__(total_pixels, req_bits, w, h)
+        if req_bits > available_bites:
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return
-        else:
-            array = self.__hide_text__(total_pixels, req_bits, array, b_message)
 
-        array=array.reshape(height, width, n)
+        bit_embedded = 0
+        pixel_index = 0
+        for pixel_index in available_pixels_list:
+            for color in range(3):
+                if req_bits <= bit_embedded:
+                    break
+
+                color_MSB_3 = self.__get_MSB_3__(array[pixel_index][color])
+                bit_position = 0
+                if color_MSB_3 == '000':
+                    bit_position = 1
+
+                bit_value = b_message[bit_embedded]
+                bits_array = bin(array[pixel_index][color])[2:]
+                bits_array = '0' * (8 - len(bits_array)) + bits_array
+                bit_set_position = len(bits_array) - bit_position - 1
+                bits_array = bits_array[:bit_set_position] + bit_value + bits_array[bit_set_position + 1:]
+                array[pixel_index][color] = int(bits_array, 2)
+                bit_embedded += 1
+
+        array=array.reshape(h, w, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
-
         self.stego_img_path = util.get_encode_path(self)
         enc_img.save(self.stego_img_path)
 
@@ -102,6 +124,7 @@ class LSB_EOM(steganographyAlgorythm):
 
         self.reset_params()
         img = Image.open(self.stego_img_path, 'r')
+        w, h = img.size
         array = np.array(list(img.getdata()))
 
         if img.mode == 'RGB':
@@ -111,10 +134,19 @@ class LSB_EOM(steganographyAlgorythm):
 
         total_pixels = array.size//n
         hidden_bits = ""
-        for p in range(total_pixels):
-            for q in range(0, 3):
-                for bit in range(self.k):
-                    hidden_bits += str(util.get_bit_value(array[p][q], bit))
+        pixel_index = 0
+        for pixel_index in range(total_pixels):
+            j = math.sin((pixel_index * 2 * math.pi / w + 1) * (h - 1) / 2)
+            if round(j, 2) != self.sine_value:
+                continue
+
+            for color in range(3):
+                color_MSB_3 = self.__get_MSB_3__(array[pixel_index][color])
+                BIT_index = 0
+                if color_MSB_3 == '000':
+                    BIT_index = 1
+
+                hidden_bits += str(util.get_bit_value(array[pixel_index][color], BIT_index))
 
         hidden_bits = [hidden_bits[i:i+8] for i in range(0, len(hidden_bits), 8)]
 
@@ -129,29 +161,33 @@ class LSB_EOM(steganographyAlgorythm):
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"
             return
-
+        
         destination_path = util.get_decode_path(self)
         destination_file = open(destination_path, "w")
         destination_file.write(message[:-len(self.end_msg)])
         destination_file.close()
 
         self.is_success = True
+    
+    def __get_MSB_3__(self, number):
+        bit_8 = util.get_bit_value(number, 7)
+        bit_7 = util.get_bit_value(number, 6)
+        bit_6 = util.get_bit_value(number, 5)
+        return rf"{bit_8}{bit_7}{bit_6}"
+    
+    def __calculate_available_bites__(self, total_pixels, req_bits, w, h):
+        pixel_index = 0
+        available_bites = 0
+        available_pixels_list = []
+        for pixel_index in range(total_pixels):
+            j = math.sin((pixel_index * 2 * math.pi / w + 1) * (h - 1) / 2)
+            if round(j, 2) != self.sine_value:
+                pixel_index += 1
+                continue
 
-    def __hide_text__(self, total_pixels, req_bits, array, b_message):
-        index=0
-        for p in range(total_pixels):
-            for q in range(0, 3):
-                AND_value = 255
-                BIT_value = 1
-                new_value = 0
-                for bit in range(self.k):
-                    if index < req_bits:
-                        AND_value -= BIT_value
-                        new_value += int(b_message[index]) * BIT_value
-                        BIT_value *= 2
-                        index += 1
-                    else:
-                        array[p][q] = (array[p][q] & AND_value) + new_value
-                        return array
-                    
-                array[p][q] = (array[p][q] & AND_value) + new_value
+            available_bites += 3
+            available_pixels_list.append(pixel_index)
+            if req_bits <= available_bites:
+                return available_bites, available_pixels_list
+
+        return available_bites, available_pixels_list

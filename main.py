@@ -2,13 +2,14 @@ from algorithms.sample import sample
 from algorithms.LSB_EOM import LSB_EOM
 from algorithms.LSB_SOM import LSB_SOM
 from algorithms.LSB_PF import LSB_PF
+from algorithms.LSB_SINE import LSB_SINE
 from algorithms.BPCS import BPCS
 
 import util
 
 # define object and run it  in the provided sample
 def example1():
-    lsb = LSB_PF(password='12345')
+    lsb = LSB_SINE(sine_phase=1)
     lsb.encode(util.get_carrier_color(2), util.get_secret_msg(1))
     util.check_error(lsb)
     lsb.decode()
@@ -38,4 +39,4 @@ if __name__ == '__main__':
     util.clean_result()
     #util.clean_all()
 
-    example2()
+    example1()

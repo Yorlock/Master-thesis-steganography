@@ -1,20 +1,20 @@
 from PIL import Image
-from util import AESCipher
 import numpy as np
 import math
-import base64
+import os
 
 from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
 class LSB_SINE(steganographyAlgorythm):
-    def __init__(self, end_msg="$t3g0", round_accuracy=2, sine_phase=1.0):
+    def __init__(self, end_msg="$t3g0", round_accuracy=2, sine_phase=1.0, save_sineimage=False):
         self.stego_img_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False
         self.error_msg = ""
         self.end_msg = end_msg
+        self.save_sineimage = save_sineimage
         if not isinstance(round_accuracy, int):
             self.round_accuracy = 2
             self.error_msg += "Parameter round_accuracy was set to 2."
@@ -81,7 +81,7 @@ class LSB_SINE(steganographyAlgorythm):
         img = Image.open(img_path, 'r')
         w, h = img.size
         array = np.array(list(img.getdata()))
-        
+
         msg_file = open(msg_path,'r')
         message = msg_file.read()
         msg_file.close()
@@ -95,8 +95,8 @@ class LSB_SINE(steganographyAlgorythm):
         message += self.end_msg
         b_message = ''.join([format(ord(i), "08b") for i in message])
         req_bits = len(b_message)
-        available_bites, available_pixels_list = self.__calculate_available_bites__(total_pixels, req_bits, w, h)
-        if req_bits > available_bites:
+        available_bits, available_pixels_list = self.__calculate_available_bits__(total_pixels, req_bits, w, h)
+        if req_bits > available_bits:
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return
@@ -125,6 +125,19 @@ class LSB_SINE(steganographyAlgorythm):
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
         self.stego_img_path = util.get_encode_path(self)
         enc_img.save(self.stego_img_path)
+
+        if self.save_sineimage:
+            file_name = "sineimage.png"
+            save_sineimagedir = util.get_encode_path_dir(self)
+            available_pixels_list
+            sine_array = np.array(list(img.getdata()))
+            sine_array[:, 0:3] = 0
+            for pixel_index in  available_pixels_list:
+                sine_array[pixel_index, 0] = 255
+
+            sine_array=sine_array.reshape(h, w, n)
+            sine_image = Image.fromarray(sine_array.astype('uint8'), img.mode)
+            sine_image.save(os.path.join(save_sineimagedir, file_name))
 
         self.is_success = True
 
@@ -186,9 +199,9 @@ class LSB_SINE(steganographyAlgorythm):
         bit_6 = util.get_bit_value(number, 5)
         return rf"{bit_8}{bit_7}{bit_6}"
     
-    def __calculate_available_bites__(self, total_pixels, req_bits, w, h):
+    def __calculate_available_bits__(self, total_pixels, req_bits, w, h):
         pixel_index = 0
-        available_bites = 0
+        available_bits = 0
         available_pixels_list = []
         for pixel_index in range(total_pixels):
             j = math.sin((pixel_index * 2 * math.pi / w + 1) * (h - 1) / 2)
@@ -196,9 +209,9 @@ class LSB_SINE(steganographyAlgorythm):
                 pixel_index += 1
                 continue
 
-            available_bites += 3
+            available_bits += 3
             available_pixels_list.append(pixel_index)
-            if req_bits <= available_bites:
-                return available_bites, available_pixels_list
+            if req_bits <= available_bits:
+                return available_bits, available_pixels_list
 
-        return available_bites, available_pixels_list
+        return available_bits, available_pixels_list

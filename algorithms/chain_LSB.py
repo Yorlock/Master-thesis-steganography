@@ -77,7 +77,6 @@ class chain_LSB(steganographyAlgorythm):
         if self.k > len(array):
             self.k = default_length
             self.error_msg += f"The value of parameter k has been changed to {default_length}."
-        
 
         msg_file = open(msg_path,'r')
         message = msg_file.read()

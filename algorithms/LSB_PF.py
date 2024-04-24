@@ -84,9 +84,9 @@ class LSB_PF(steganographyAlgorythm):
             n = 4
 
         total_pixels = array.size//n
-        available_bites, pixels_index  = self.__get_MSB_filter__(array, total_pixels)
+        available_bits, pixels_index  = self.__get_MSB_filter__(array, total_pixels)
 
-        if req_bits > available_bites:
+        if req_bits > available_bits:
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return

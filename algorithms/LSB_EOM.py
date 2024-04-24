@@ -108,8 +108,8 @@ class LSB_EOM(steganographyAlgorythm):
             n = 3
         elif img.mode == 'RGBA':
             n = 4
-        total_pixels = array.size//n
 
+        total_pixels = array.size//n
         hidden_bits = ""
         for p in range(total_pixels):
             for q in range(0, 3):
@@ -124,6 +124,7 @@ class LSB_EOM(steganographyAlgorythm):
                 break
             else:
                 message += chr(int(hidden_bits[i], 2))
+
         if self.end_msg not in message:
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"

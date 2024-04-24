@@ -91,6 +91,7 @@ def get_encode_path_dir(self):
     Path(destination_path).mkdir(parents=True, exist_ok=True)
 
     destination_path = os.path.join(destination_path, dirname)
+    Path(destination_path).mkdir(parents=True, exist_ok=True)
 
     return destination_path
 

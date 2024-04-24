@@ -1,0 +1,5 @@
+PIL
+numpy
+matplotlib
+bpcs @ git+https://github.com/Yorlock/bpcs
+PyCryptodome

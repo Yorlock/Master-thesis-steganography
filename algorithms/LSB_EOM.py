@@ -108,13 +108,13 @@ class LSB_EOM(steganographyAlgorythm):
             n = 3
         elif img.mode == 'RGBA':
             n = 4
-        total_pixels = array.size//n
 
+        total_pixels = array.size//n
         hidden_bits = ""
         for p in range(total_pixels):
             for q in range(0, 3):
                 for bit in range(self.k):
-                    hidden_bits += str(self.__get_bit_value__(array[p][q], bit))
+                    hidden_bits += str(util.get_bit_value(array[p][q], bit))
 
         hidden_bits = [hidden_bits[i:i+8] for i in range(0, len(hidden_bits), 8)]
 
@@ -124,6 +124,7 @@ class LSB_EOM(steganographyAlgorythm):
                 break
             else:
                 message += chr(int(hidden_bits[i], 2))
+
         if self.end_msg not in message:
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"
@@ -154,12 +155,3 @@ class LSB_EOM(steganographyAlgorythm):
                         return array
                     
                 array[p][q] = (array[p][q] & AND_value) + new_value
-    
-    def __get_bit_value__(self, number, n):
-        # Create a mask with a 1 at the nth position
-        mask = 1 << n
-
-        # Perform bitwise AND operation with the number and mask
-        # If the result is non-zero, the bit at position n is 1, otherwise, it's 0
-        return (number & mask) >> n
-    

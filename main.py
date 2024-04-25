@@ -5,7 +5,7 @@ from algorithms.LSB_PF import LSB_PF
 from algorithms.PVD_8D import PVD_8D
 from algorithms.LSB_SINE import LSB_SINE
 from algorithms.BPCS import BPCS
-
+from algorithms.chain_LSB import chain_LSB
 import util
 
 # define object and run it  in the provided sample

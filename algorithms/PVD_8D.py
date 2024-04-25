@@ -7,13 +7,14 @@ import util
 
 #Type 1 possesses higher PSNR and type 2 possesses higher hiding capacity
 class PVD_8D(steganographyAlgorythm):
-    def __init__(self, end_msg="$t3g0", type=2, t=3):
+    def __init__(self, end_msg="$t3g0", type=1, t=3, estimation = True):
         self.stego_img_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False
         self.error_msg = ""
         self.end_msg = end_msg
+        self.estimation = estimation
         if not isinstance(type, int):
             self.type = 1
             self.error_msg += "Parameter type was set to 1."
@@ -101,9 +102,9 @@ class PVD_8D(steganographyAlgorythm):
         req_bits = len(b_message)
         available_bits, block_list = self.__calculate_available_bits__(req_bits, matrix, width, height)
 
-        if req_bits > available_bits:
+        if self.estimation and req_bits > available_bits:
             self.is_success = False
-            self.error_msg = "ERROR: Need larger file size."
+            self.error_msg = "ERROR: An estimate of the available bits shows that a larger file size is needed. Turn off estimation, but this may cause an application error."
             return
 
         enc_block_list = self.__hide_text__(req_bits, block_list, b_message, n)
@@ -165,13 +166,25 @@ class PVD_8D(steganographyAlgorythm):
                 start_row = i * 3
                 start_col = j * 3
                 block = matrix[start_row:start_row+3, start_col:start_col+3]
-                available_bits += self.t * 3
+                available_bits += self.__estimate_available_bits_block__(block)
                 blocks.append(block)
-                if req_bits <= available_bits:
+                if self.estimation and req_bits <= available_bits:
                     return available_bits, blocks
 
         return available_bits, blocks
     
+    def __estimate_available_bits_block__(self, block):
+        block_bits = self.t * 3
+        for color in range(3):
+            middle_value = int(block[1][1][color])
+            for x in range(3):
+                for y in range(3):
+                    if x != 1 or y != 1:
+                        value, _ = self.__calculate_capacity__(np.abs(middle_value - int(block[x][y][color])))
+                        block_bits += value
+
+        return block_bits
+
     def __get_pixel_value__(self, pixel, num_bits):
         bits = ''
         for i in range(num_bits):
@@ -183,7 +196,7 @@ class PVD_8D(steganographyAlgorythm):
         for index in range(len(self.type_range)):
             if value >= self.type_range[index][0] and value <= self.type_range[index][1]:
                 return self.type_capacity[index], self.type_range[index][0]
-        return 0
+        return 0, 0
     
     def __hide_text__(self, req_bits, block_list, b_message, n):
         used_bits = 0
@@ -200,7 +213,7 @@ class PVD_8D(steganographyAlgorythm):
                     left_bits = req_bits - used_bits
                     middle_value_chonk_bit = self.__get_pixel_value__(enc_block_list[used_block][1][1][color], self.t - left_bits)
                     message_value_bit = b_message[used_bits:used_bits+left_bits]
-                    message_value_bit = middle_value_chonk_bit + message_value_bit
+                    message_value_bit = message_value_bit + middle_value_chonk_bit
                     used_bits += left_bits
                 else:
                     message_value_bit = b_message[used_bits:used_bits+self.t]
@@ -220,14 +233,15 @@ class PVD_8D(steganographyAlgorythm):
 
                 new_color_array = np.empty((0,), int)
                 for P in color_array:
-                    d = np.abs(P_1 - int(P))
+                    P = int(P)
+                    d = np.abs(P_1 - P)
                     t, L = self.__calculate_capacity__(d)
 
                     if used_bits+t > req_bits:
                         left_bits = req_bits - used_bits
                         middle_value_chonk_bit = self.__get_pixel_value__(P, t - left_bits)
                         message_value_bit = b_message[used_bits:used_bits+left_bits]
-                        message_value_bit = middle_value_chonk_bit + message_value_bit
+                        message_value_bit = message_value_bit + middle_value_chonk_bit
                         S = int(message_value_bit,2)
                         used_bits += left_bits
                     else:
@@ -256,13 +270,13 @@ class PVD_8D(steganographyAlgorythm):
         y = 0
         for value in array:
             if x == 1 and y == 1:
-                x += 1
+                y += 1
 
             block[x][y][color] = value
-            x += 1
-            if x == 3:
-                x = 0
-                y += 1
+            y += 1
+            if y == 3:
+                y = 0
+                x += 1
     
     def __update_matrix__(self, matrix, block_list, cols, rows):
         num_blocks_row = rows // 3
@@ -297,12 +311,13 @@ class PVD_8D(steganographyAlgorythm):
         hidden_bits = ""
         array = block.flatten()
         for color in range(3):
-            P_1 = block[1][1][color]
+            P_1 = int(block[1][1][color])
             hidden_bits += self.__get_pixel_value__(P_1, self.t)
             color_array = array[color::n]
             color_array = np.delete(color_array, 4)
             for P in color_array:
-                d = np.abs(int(P_1) - int(P))
+                P = int(P)
+                d = np.abs(P_1 - P)
                 t, L = self.__calculate_capacity__(d)
                 S = d - L
                 S_bits = bin(S)[2:]

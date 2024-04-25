@@ -187,7 +187,7 @@ class PVD_8D(steganographyAlgorythm):
 
     def __get_pixel_value__(self, pixel, num_bits):
         bits = ''
-        for i in range(num_bits):
+        for i in range(num_bits-1,-1,-1):
             bits += str(util.get_bit_value(pixel, i))
         
         return bits
@@ -323,5 +323,4 @@ class PVD_8D(steganographyAlgorythm):
                 S_bits = bin(S)[2:]
                 S_bits = '0' * (t - len(S_bits)) + S_bits
                 hidden_bits += S_bits
-
         return hidden_bits

@@ -18,7 +18,7 @@ class PVD_8D(steganographyAlgorythm):
         if not isinstance(type, int):
             self.type = 1
             self.error_msg += "Parameter type was set to 1."
-        elif type != 1 and type != 2:
+        elif type != 0 and type != 1 and type != 2:
             self.type = 1
             self.error_msg += "Parameter type was set to 1."
         else:
@@ -36,8 +36,10 @@ class PVD_8D(steganographyAlgorythm):
         self.type_range = np.array([[0,7],[8,15],[16,31],[32,63],[64,127],[128,255]])
         if self.type == 1:
             self.type_capacity = np.array([3, 3, 3, 3, 4, 4])
-        else:
+        elif self.type == 2:
             self.type_capacity = np.array([3, 3, 4, 5, 6, 6])
+        else:
+            self.type_capacity = np.array([1, 1, 1, 2, 2, 3])
 
     @property
     def is_success(self):
@@ -132,14 +134,23 @@ class PVD_8D(steganographyAlgorythm):
             n = 4
 
         block_list = self.__get_block_list__(matrix, width, height)
+        block_bits = ""
         message = ""
+
+        is_end = False
         left_bits = ""
         for block in block_list:
-            block_bits = left_bits + self.__get_hidden_text_from_block__(block, n)
+            if is_end:
+                break
+
+            block_bits = left_bits + self.__get_hidden_text_from_block__(block, n)    
             hidden_bits = [block_bits[i:i+8] for i in range(0, len(block_bits), 8)]
+            if hidden_bits[len(hidden_bits) - 1] != 8:
+                hidden_bits = hidden_bits[:-1]
             left_bits = block_bits[-(len(block_bits)%8):]
             for i in range(len(hidden_bits)):
                 if message[-len(self.end_msg):] == self.end_msg:
+                    is_end = True
                     break
                 else:
                     message += chr(int(hidden_bits[i], 2))

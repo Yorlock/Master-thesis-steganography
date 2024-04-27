@@ -9,6 +9,7 @@ import util
 class PVD_8D(steganographyAlgorythm):
     def __init__(self, end_msg="$t3g0", type=1, t=3, estimation = True):
         self.stego_img_path = ""
+        self.destination_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False
@@ -81,6 +82,14 @@ class PVD_8D(steganographyAlgorythm):
     def stego_img_path(self, value):
         self._stego_img_path = value
 
+    @property
+    def destination_path(self):
+        return self._destination_path
+    
+    @destination_path.setter
+    def destination_path(self, value):
+        self._destination_path = value
+
     def reset_params(self):
         self.is_success = False
         self.error_msg = ""
@@ -136,14 +145,14 @@ class PVD_8D(steganographyAlgorythm):
         block_list = self.__get_block_list__(matrix, width, height)
         block_bits = ""
         message = ""
-        
+
         is_end = False
         left_bits = ''
         for block in block_list:
             if is_end:
                 break
 
-            block_bits = left_bits + self.__get_hidden_text_from_block__(block, n)    
+            block_bits = left_bits + self.__get_hidden_text_from_block__(block, n)
             hidden_bits = [block_bits[i:i+8] for i in range(0, len(block_bits), 8)]
             if hidden_bits[len(hidden_bits) - 1] != 8:
                 left_bits = hidden_bits[-1]
@@ -157,14 +166,14 @@ class PVD_8D(steganographyAlgorythm):
                     break
                 else:
                     message += chr(int(hidden_bits[i], 2))        
-        
+
         if self.end_msg not in message:
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"
             return
 
-        destination_path = util.get_decode_path(self)
-        destination_file = open(destination_path, "w")
+        self.destination_path = util.get_decode_path(self)
+        destination_file = open(self.destination_path, "w")
         destination_file.write(message[:-len(self.end_msg)])
         destination_file.close()
 

@@ -10,6 +10,7 @@ import util
 class LSB_PF(steganographyAlgorythm):
     def __init__(self, password='12345', color='B', end_msg="$t3g0"):
         self.stego_img_path = ""
+        self.destination_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False
@@ -59,6 +60,14 @@ class LSB_PF(steganographyAlgorythm):
     @stego_img_path.setter
     def stego_img_path(self, value):
         self._stego_img_path = value
+
+    @property
+    def destination_path(self):
+        return self._destination_path
+    
+    @destination_path.setter
+    def destination_path(self, value):
+        self._destination_path = value
 
     def reset_params(self):
         self.is_success = False
@@ -141,38 +150,42 @@ class LSB_PF(steganographyAlgorythm):
         password_blocks = [int(password_bits[i:i+3], 2) for i in range(0, len(password_bits), 3)]
         blocks_len = len(password_blocks)
 
+        message = ""
+        enc_message = ""
         hidden_bits = ""
         index_block = 0
-        index_pixel = 0
         change_color = self.colors.index(self.color)
+        end_msg_base64 = base64.b64encode(str.encode(self.end_msg)).decode("utf-8")
+        is_end = False
         for p in range(total_pixels):
+            if is_end:
+                break
+            
+            if not pixels_index[p]:
+                continue
+
             block = password_blocks[index_block % blocks_len]
             index_block += 1
-            while total_pixels > index_pixel:
-                if pixels_index[index_pixel]:
-                    hide_value = util.get_bit_value(array[index_pixel][change_color], block)
-                    if block == 0:
-                        hidden_bits += str(hide_value)
-                    else:
-                        LSB_value = util.get_bit_value(array[index_pixel][change_color], 0)
-                        if LSB_value == 1:
-                            hidden_bits += str(self.__reverse_value__(hide_value))
-                        else:
-                            hidden_bits += str(hide_value)
-
-                    index_pixel += 1
-                    break
-                index_pixel += 1
-
-        hidden_bits = [hidden_bits[i:i+8] for i in range(0, len(hidden_bits), 8)]
-        enc_message = ""
-        end_msg_base64 = base64.b64encode(str.encode(self.end_msg)).decode("utf-8")
-        for i in range(len(hidden_bits)):
-            if enc_message[-len(end_msg_base64):] == end_msg_base64:
-                break
+            hide_value = util.get_bit_value(array[p][change_color], block)
+            if block == 0:
+                hidden_bits += str(hide_value)
             else:
-                enc_message += chr(int(hidden_bits[i], 2))
+                LSB_value = util.get_bit_value(array[p][change_color], 0)
+                if LSB_value == 1:
+                    hidden_bits += str(self.__reverse_value__(hide_value))
+                else:
+                    hidden_bits += str(hide_value)
 
+            if len(hidden_bits) >= 8: 
+                if enc_message[-len(end_msg_base64):] == end_msg_base64:
+                    is_end = True
+                    break
+                else:
+                    enc_message += chr(int(hidden_bits, 2))
+                
+                hidden_bits = ''
+
+                        
         if end_msg_base64 not in enc_message:
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"
@@ -181,8 +194,8 @@ class LSB_PF(steganographyAlgorythm):
         cipher = AESCipher(self.password)
         message = cipher.decrypt(enc_message[:-len(end_msg_base64)])
 
-        destination_path = util.get_decode_path(self)
-        destination_file = open(destination_path, "w")
+        self.destination_path = util.get_decode_path(self)
+        destination_file = open(self.destination_path, "w")
         destination_file.write(message)
         destination_file.close()
 

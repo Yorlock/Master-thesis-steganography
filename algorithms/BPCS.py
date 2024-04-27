@@ -8,6 +8,7 @@ import util
 class BPCS(steganographyAlgorythm):
     def __init__(self, alpha=0.45, save_bitplates=False):
         self.stego_img_path = ""
+        self.destination_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.alpha = alpha
@@ -55,6 +56,14 @@ class BPCS(steganographyAlgorythm):
     def stego_img_path(self, value):
         self._stego_img_path = value
 
+    @property
+    def destination_path(self):
+        return self._destination_path
+    
+    @destination_path.setter
+    def destination_path(self, value):
+        self._destination_path = value
+
     def reset_params(self):
         self.is_success = False
         self.error_msg = ""
@@ -74,6 +83,6 @@ class BPCS(steganographyAlgorythm):
             return
         
         self.reset_params()
-        destination_path = util.get_decode_path(self)
-        bpcs.decode(self.stego_img_path, destination_path, self.alpha)
+        self.destination_path = util.get_decode_path(self)
+        bpcs.decode(self.stego_img_path, self.destination_path, self.alpha)
         self.is_success = True

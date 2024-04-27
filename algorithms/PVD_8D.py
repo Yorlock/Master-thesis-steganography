@@ -40,7 +40,7 @@ class PVD_8D(steganographyAlgorythm):
         elif self.type == 2:
             self.type_capacity = np.array([3, 3, 4, 5, 6, 6])
         else:
-            self.type_capacity = np.array([1, 1, 1, 2, 2, 3])
+            self.type_capacity = np.array([1, 1, 1, 1, 1, 1])
 
     @property
     def is_success(self):
@@ -224,17 +224,16 @@ class PVD_8D(steganographyAlgorythm):
     def __hide_text__(self, req_bits, block_list, b_message, n):
         used_bits = 0
         used_block = -1
-        enc_block_list = block_list.copy()
         while used_bits < req_bits:
             used_block += 1
-            current_array = enc_block_list[used_block].flatten()
+            current_array = block_list[used_block].flatten()
             for color in range(3):
                 if used_bits >= req_bits:
-                    return enc_block_list
+                    return block_list
 
                 if used_bits+self.t > req_bits:
                     left_bits = req_bits - used_bits
-                    middle_value_chonk_bit = self.__get_pixel_value__(enc_block_list[used_block][1][1][color], self.t - left_bits)
+                    middle_value_chonk_bit = self.__get_pixel_value__(block_list[used_block][1][1][color], self.t - left_bits)
                     message_value_bit = b_message[used_bits:used_bits+left_bits]
                     message_value_bit = message_value_bit + middle_value_chonk_bit
                     used_bits += left_bits
@@ -244,22 +243,21 @@ class PVD_8D(steganographyAlgorythm):
 
                 color_array = current_array[color::n]
                 color_array = np.delete(color_array, 4)
-                middle_value_int_old = enc_block_list[used_block][1][1][color]
+                middle_value_int_old = block_list[used_block][1][1][color]
                 middle_value_bit_new = bin(middle_value_int_old)[2:]
                 middle_value_bit_new = '0' * (8 - len(middle_value_bit_new)) + middle_value_bit_new
                 middle_value_bit_new = middle_value_bit_new[:8-self.t] + message_value_bit
 
                 P_1 = int(middle_value_bit_new, 2)
-                enc_block_list[used_block][1][1][color] = P_1
+                block_list[used_block][1][1][color] = P_1
                 if used_bits >= req_bits:
-                    return enc_block_list
+                    return block_list
 
                 new_color_array = np.empty((0,), int)
                 for P in color_array:
                     P = int(P)
                     d = np.abs(P_1 - P)
                     t, L = self.__calculate_capacity__(d)
-
                     if used_bits+t > req_bits:
                         left_bits = req_bits - used_bits
                         middle_value_chonk_bit = self.__get_pixel_value__(P, t - left_bits)
@@ -281,12 +279,12 @@ class PVD_8D(steganographyAlgorythm):
 
                     new_color_array = np.append(new_color_array, new_P_1)
                     if used_bits >= req_bits:
-                        self.__write_new_value_to_block__(new_color_array, enc_block_list[used_block], color)
-                        return enc_block_list
+                        self.__write_new_value_to_block__(new_color_array, block_list[used_block], color)
+                        return block_list
             
-                self.__write_new_value_to_block__(new_color_array, enc_block_list[used_block], color)
+                self.__write_new_value_to_block__(new_color_array, block_list[used_block], color)
 
-        return enc_block_list
+        return block_list
     
     def __write_new_value_to_block__(self, array, block, color):
         x = 0

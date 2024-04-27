@@ -9,6 +9,7 @@ import util
 class LSB_SINE(steganographyAlgorythm):
     def __init__(self, end_msg="$t3g0", round_accuracy=2, sine_phase=1.0, save_sineimage=False):
         self.stego_img_path = ""
+        self.destination_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False
@@ -72,6 +73,14 @@ class LSB_SINE(steganographyAlgorythm):
     @stego_img_path.setter
     def stego_img_path(self, value):
         self._stego_img_path = value
+
+    @property
+    def destination_path(self):
+        return self._destination_path
+    
+    @destination_path.setter
+    def destination_path(self, value):
+        self._destination_path = value
 
     def reset_params(self):
         self.is_success = False
@@ -186,8 +195,8 @@ class LSB_SINE(steganographyAlgorythm):
             self.error_msg = "No Hidden Message Found\n"
             return
         
-        destination_path = util.get_decode_path(self)
-        destination_file = open(destination_path, "w")
+        self.destination_path = util.get_decode_path(self)
+        destination_file = open(self.destination_path, "w")
         destination_file.write(message[:-len(self.end_msg)])
         destination_file.close()
 

@@ -10,6 +10,7 @@ import util
 class LSB_PF(steganographyAlgorythm):
     def __init__(self, password='12345', color='B', end_msg="$t3g0"):
         self.stego_img_path = ""
+        self.destination_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False
@@ -59,6 +60,14 @@ class LSB_PF(steganographyAlgorythm):
     @stego_img_path.setter
     def stego_img_path(self, value):
         self._stego_img_path = value
+
+    @property
+    def destination_path(self):
+        return self._destination_path
+    
+    @destination_path.setter
+    def destination_path(self, value):
+        self._destination_path = value
 
     def reset_params(self):
         self.is_success = False
@@ -181,8 +190,8 @@ class LSB_PF(steganographyAlgorythm):
         cipher = AESCipher(self.password)
         message = cipher.decrypt(enc_message[:-len(end_msg_base64)])
 
-        destination_path = util.get_decode_path(self)
-        destination_file = open(destination_path, "w")
+        self.destination_path = util.get_decode_path(self)
+        destination_file = open(self.destination_path, "w")
         destination_file.write(message)
         destination_file.close()
 

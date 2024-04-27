@@ -7,6 +7,7 @@ import util
 class LSB_EOM(steganographyAlgorythm):
     def __init__(self, end_msg="$t3g0", k=1):
         self.stego_img_path = ""
+        self.destination_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False
@@ -56,6 +57,14 @@ class LSB_EOM(steganographyAlgorythm):
     @stego_img_path.setter
     def stego_img_path(self, value):
         self._stego_img_path = value
+
+    @property
+    def destination_path(self):
+        return self._destination_path
+    
+    @destination_path.setter
+    def destination_path(self, value):
+        self._destination_path = value
 
     def reset_params(self):
         self.is_success = False
@@ -111,27 +120,40 @@ class LSB_EOM(steganographyAlgorythm):
 
         total_pixels = array.size//n
         hidden_bits = ""
+        block_bits = ""
+        message = ""
+        
+        is_end = False
+        left_bits = ''
         for p in range(total_pixels):
+            if is_end:
+                break
+
+            block_bits = left_bits
             for q in range(0, 3):
                 for bit in range(self.k):
-                    hidden_bits += str(util.get_bit_value(array[p][q], bit))
-
-        hidden_bits = [hidden_bits[i:i+8] for i in range(0, len(hidden_bits), 8)]
-
-        message = ""
-        for i in range(len(hidden_bits)):
-            if message[-len(self.end_msg):] == self.end_msg:
-                break
+                    block_bits += str(util.get_bit_value(array[p][q], bit))
+            hidden_bits = [block_bits[i:i+8] for i in range(0, len(block_bits), 8)]
+            if hidden_bits[len(hidden_bits) - 1] != 8:
+                left_bits = hidden_bits[-1]
+                hidden_bits = hidden_bits[:-1]
             else:
-                message += chr(int(hidden_bits[i], 2))
+                left_bits = ''
+            
+            for i in range(len(hidden_bits)):
+                if message[-len(self.end_msg):] == self.end_msg:
+                    is_end = True
+                    break
+                else:
+                    message += chr(int(hidden_bits[i], 2))   
 
         if self.end_msg not in message:
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"
             return
 
-        destination_path = util.get_decode_path(self)
-        destination_file = open(destination_path, "w")
+        self.destination_path = util.get_decode_path(self)
+        destination_file = open(self.destination_path, "w")
         destination_file.write(message[:-len(self.end_msg)])
         destination_file.close()
 

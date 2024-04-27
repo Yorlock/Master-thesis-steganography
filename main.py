@@ -9,7 +9,7 @@ import util
 
 # define object and run it  in the provided sample
 def example1():
-    lsb = chain_LSB()
+    lsb = LSB_EOM()
     lsb.encode(util.get_carrier_color(2), util.get_secret_msg(2))
     util.check_error(lsb)
     lsb.decode()

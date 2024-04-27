@@ -8,6 +8,7 @@ import util
 class LSB_SOM(steganographyAlgorythm):
     def __init__(self, k=1):
         self.stego_img_path = ""
+        self.destination_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False
@@ -56,6 +57,14 @@ class LSB_SOM(steganographyAlgorythm):
     @stego_img_path.setter
     def stego_img_path(self, value):
         self._stego_img_path = value
+    
+    @property
+    def destination_path(self):
+        return self._destination_path
+    
+    @destination_path.setter
+    def destination_path(self, value):
+        self._destination_path = value
 
     def reset_params(self):
         self.is_success = False
@@ -127,8 +136,8 @@ class LSB_SOM(steganographyAlgorythm):
         for i in range(len(hidden_bits)):
             message += chr(int(hidden_bits[i], 2))
 
-        destination_path = util.get_decode_path(self)
-        destination_file = open(destination_path, "w")
+        self.destination_path = util.get_decode_path(self)
+        destination_file = open(self.destination_path, "w")
         destination_file.write(message)
         destination_file.close()
 

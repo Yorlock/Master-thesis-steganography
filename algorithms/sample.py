@@ -8,6 +8,7 @@ class sample(steganographyAlgorythm):
 
     def __init__(self):
         self.stego_img_path = ""
+        self.destination_path = ""
         self.msg_b_len = 0
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
@@ -54,6 +55,14 @@ class sample(steganographyAlgorythm):
     def stego_img_path(self, value):
         self._stego_img_path = value
 
+    @property
+    def destination_path(self):
+        return self._destination_path
+    
+    @destination_path.setter
+    def destination_path(self, value):
+        self._destination_path = value
+
     def reset_params(self):
         self.is_success = False
         self.error_msg = ""
@@ -71,9 +80,8 @@ class sample(steganographyAlgorythm):
         found_text = self.__find_text__(self.stego_img_path)
         plain_text = self.__bits_to_text__(found_text)
         
-        destination_path = util.get_decode_path(self)
-        
-        destination_file = open(destination_path, "w")
+        self.destination_path = util.get_decode_path(self)
+        destination_file = open(self.destination_path, "w")
         destination_file.write(plain_text)
         destination_file.close()
 

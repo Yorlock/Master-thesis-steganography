@@ -42,6 +42,14 @@ class steganographyAlgorythm(ABC):
     def stego_img_path(self, value):
         pass
 
+    @property
+    def destination_path(self):
+        return self._destination_path
+    
+    @destination_path.setter
+    def destination_path(self, value):
+        self._destination_path = value
+
     @abstractmethod
     def reset_params(self):
         pass

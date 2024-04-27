@@ -136,9 +136,9 @@ class PVD_8D(steganographyAlgorythm):
         block_list = self.__get_block_list__(matrix, width, height)
         block_bits = ""
         message = ""
-
+        
         is_end = False
-        left_bits = ""
+        left_bits = ''
         for block in block_list:
             if is_end:
                 break
@@ -146,15 +146,18 @@ class PVD_8D(steganographyAlgorythm):
             block_bits = left_bits + self.__get_hidden_text_from_block__(block, n)    
             hidden_bits = [block_bits[i:i+8] for i in range(0, len(block_bits), 8)]
             if hidden_bits[len(hidden_bits) - 1] != 8:
+                left_bits = hidden_bits[-1]
                 hidden_bits = hidden_bits[:-1]
-            left_bits = block_bits[-(len(block_bits)%8):]
+            else:
+                left_bits = ''
+            
             for i in range(len(hidden_bits)):
                 if message[-len(self.end_msg):] == self.end_msg:
                     is_end = True
                     break
                 else:
-                    message += chr(int(hidden_bits[i], 2))
-
+                    message += chr(int(hidden_bits[i], 2))        
+        
         if self.end_msg not in message:
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"

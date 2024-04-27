@@ -167,28 +167,41 @@ class LSB_SINE(steganographyAlgorythm):
 
         total_pixels = array.size//n
         hidden_bits = ""
+        message = ""
+        block_bits = ""
+        left_bits = ""
         pixel_index = 0
+        is_end = False
         for pixel_index in range(total_pixels):
+            if is_end:
+                break
+
             j = math.sin((pixel_index * 2 * math.pi / w + 1) * (h - 1) / 2)
             if round(j, self.round_accuracy) != self.sine_value:
                 continue
-
+            
+            block_bits = left_bits
             for color in range(3):
                 color_MSB_3 = self.__get_MSB_3__(array[pixel_index][color])
                 BIT_index = 0
                 if color_MSB_3 == '000':
                     BIT_index = 1
 
-                hidden_bits += str(util.get_bit_value(array[pixel_index][color], BIT_index))
+                block_bits += str(util.get_bit_value(array[pixel_index][color], BIT_index))
 
-        hidden_bits = [hidden_bits[i:i+8] for i in range(0, len(hidden_bits), 8)]
-
-        message = ""
-        for i in range(len(hidden_bits)):
-            if message[-len(self.end_msg):] == self.end_msg:
-                break
+            hidden_bits = [block_bits[i:i+8] for i in range(0, len(block_bits), 8)]
+            if hidden_bits[len(hidden_bits) - 1] != 8:
+                left_bits = hidden_bits[-1]
+                hidden_bits = hidden_bits[:-1]
             else:
-                message += chr(int(hidden_bits[i], 2))
+                left_bits = ''
+                
+            for i in range(len(hidden_bits)):
+                if message[-len(self.end_msg):] == self.end_msg:
+                    is_end = True
+                    break
+                else:
+                    message += chr(int(hidden_bits[i], 2))
 
         if self.end_msg not in message:
             self.is_success = False

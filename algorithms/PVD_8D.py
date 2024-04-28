@@ -6,6 +6,7 @@ from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
 #Type 1 possesses higher PSNR and type 2 possesses higher hiding capacity
+#Type 1 and type 2 implementations may not work - Wrong bit found when S > t
 class PVD_8D(steganographyAlgorythm):
     def __init__(self, end_msg="$t3g0", type=1, estimation = True):
         self.stego_img_path = ""
@@ -338,10 +339,6 @@ class PVD_8D(steganographyAlgorythm):
                     new_value = upper_value - S
                     new_value_bits = bin(new_value)[2:]
                     new_value_bits = '0' * (8 - len(new_value_bits)) + new_value_bits
-                    new_t = self.t
-                    if t > self.t:
-                        new_t = t-1
-
                     S_bits = new_value_bits[-self.t:]
                 elif len(S_bits) < t:
                     S_bits = '0' * (t - len(S_bits)) + S_bits

@@ -2,6 +2,7 @@ from algorithms.sample import sample
 from algorithms.LSB_EOM import LSB_EOM
 from algorithms.LSB_SOM import LSB_SOM
 from algorithms.LSB_PF import LSB_PF
+from algorithms.QVD_8D import QVD_8D
 from algorithms.PVD_8D import PVD_8D
 from algorithms.LSB_SINE import LSB_SINE
 from algorithms.BPCS import BPCS
@@ -10,8 +11,8 @@ import util
 
 # define object and run it  in the provided sample
 def example1():
-    lsb = PVD_8D()
-    lsb.encode(util.get_carrier_color(2), util.get_secret_msg(4))
+    lsb = QVD_8D(end_msg="$t3g0")
+    lsb.encode(util.get_carrier_color(2), util.get_secret_msg(1))
     util.check_error(lsb)
     lsb.decode()
     util.check_error(lsb)

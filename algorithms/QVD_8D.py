@@ -168,7 +168,7 @@ class QVD_8D(steganographyAlgorythm):
                 start_row = i * 3
                 start_col = j * 3
                 block = matrix[start_row:start_row+3, start_col:start_col+3]
-                available_bits += (17 + self.type_capacity[0] * 8) * 3 # QVD scenario * RGB
+                available_bits += 35 * 3 # LSB scenario * RGB
                 blocks.append(block)
                 if self.estimation and req_bits <= available_bits:
                     return available_bits, blocks
@@ -197,7 +197,7 @@ class QVD_8D(steganographyAlgorythm):
             for color in range(3):
                 for x in range(3):
                     for y in range(3):
-                        block_quotient[x][y][color] = np.divide(block_quotient[x][y][color], 4)
+                        block_quotient[x][y][color] = block_quotient[x][y][color] // 4
                         block_reminder[x][y][color] = np.mod(block_reminder[x][y][color], 4)
 
             quotient_block_list.append(block_quotient)
@@ -257,7 +257,8 @@ class QVD_8D(steganographyAlgorythm):
                 quotient_avg = 0
                 fall_of_boundary = False
                 for q_value in color_quotient_array:
-                    value_d = int(q_value) - int(quotient_middle_value)
+                    q_value = int(q_value)
+                    value_d = q_value - quotient_middle_value
                     fall_of_boundary, n, L = self.__calculate_capacity__(np.abs(value_d))
                     if fall_of_boundary:
                         break
@@ -398,7 +399,7 @@ class QVD_8D(steganographyAlgorythm):
                     R = np.mod(middle_value, 4)
                     R_bit = bin(R)[2:]
                     hidden_bits += R_bit
-                    Q = np.divide(value, 4)
+                    Q = value // 4
                     d = np.abs(Qc - Q)
                     _, n, L  = self.__calculate_capacity__(d)
                     b_value = int(np.floor(np.abs(d - L)))

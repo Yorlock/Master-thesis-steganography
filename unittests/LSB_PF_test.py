@@ -12,10 +12,11 @@ class Test_LSB_PF(unittest.TestCase):
 
     def setUp(self):
         util.init_instance()
-        util.clean_result()
+        #util.clean_result()
     
     def tearDown(self):
-        util.clean_all()
+        #util.clean_all()
+        temp = 1
 
     def test_LSB_PF_secret_1(self):
         alg = LSB_PF(password='12345', color='B', end_msg="$t3g0")

@@ -12,10 +12,11 @@ class Test_LSB_EOM(unittest.TestCase):
 
     def setUp(self):
         util.init_instance()
-        util.clean_result()
+        #util.clean_result()
     
     def tearDown(self):
-        util.clean_all()
+        #util.clean_all()
+        temp = 1
 
     def test_LSB_EOM_secret_1_k_1(self):
         alg = LSB_EOM(k=1, end_msg="$t3g0")

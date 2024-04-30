@@ -89,7 +89,6 @@ class QVD_8D(steganographyAlgorythm):
         b_message = ''.join([format(ord(i), "08b") for i in message])
         req_bits = len(b_message)
         available_bits, block_list = self.__calculate_available_bits__(req_bits, matrix, width, height)
-
         if self.estimation and req_bits > available_bits:
             self.is_success = False
             self.error_msg = "ERROR: An estimate of the available bits shows that a larger file size is needed. Turn off estimation, but this may cause an application error."
@@ -247,7 +246,6 @@ class QVD_8D(steganographyAlgorythm):
                 middle_value_LSB_bit = current_b_message[0] + '1'
                 middle_value_LSB_int = int(middle_value_LSB_bit, 2)
                 current_b_message = current_b_message[1:]
-                middle_value_new = int(middle_value_bit[:6] + middle_value_LSB_bit, 2)
                 for i in range(8):
                     value_LSB = int(current_b_message[:2], 2)
                     current_b_message = current_b_message[2:]
@@ -323,8 +321,8 @@ class QVD_8D(steganographyAlgorythm):
                 else: #QVD
                     quotient_middle_value_avg = int(np.ceil(quotient_avg / 8))
                     for i in range(8):
-                        color_quotient_q_array[i][1] = color_quotient_q_array[i][1] + (color_quotient_q_array[i][0] - quotient_middle_value_avg)
-                        value_new = color_quotient_q_array[i][1] * 4 + color_reminder_2_array[i]
+                        Q_i = color_quotient_q_array[i][1] + (quotient_middle_value_avg - color_quotient_q_array[i][0])
+                        value_new = Q_i * 4 + color_reminder_2_array[i]
                         color_array_new = np.append(color_array_new, value_new)
 
                     middle_value_new = quotient_middle_value_avg * 4 + middle_value_LSB_int
@@ -394,11 +392,14 @@ class QVD_8D(steganographyAlgorythm):
                     hidden_bits += value_bit[-4:]
             else: #QVD
                 hidden_bits += middle_value_bit[-2]
-                Qc = np.mod(middle_value, 4)
                 for value in color_array:
-                    R = np.mod(middle_value, 4)
+                    R = np.mod(value, 4)
                     R_bit = bin(R)[2:]
+                    R_bit = '0' * (2 - len(R_bit)) + R_bit
                     hidden_bits += R_bit
+                
+                Qc = middle_value // 4
+                for value in color_array:
                     Q = value // 4
                     d = np.abs(Qc - Q)
                     _, n, L  = self.__calculate_capacity__(d)

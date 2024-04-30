@@ -183,6 +183,7 @@ class PVD_8D(steganographyAlgorythm):
                 start_row = i * 3
                 start_col = j * 3
                 block = matrix[start_row:start_row+3, start_col:start_col+3]
+                block = np.array(block, dtype='int')
                 available_bits += self.t * 3 + self.type_capacity[0] * 8 * 3
                 blocks.append(block)
                 if self.estimation and req_bits <= available_bits:

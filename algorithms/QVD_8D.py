@@ -167,6 +167,7 @@ class QVD_8D(steganographyAlgorythm):
                 start_row = i * 3
                 start_col = j * 3
                 block = matrix[start_row:start_row+3, start_col:start_col+3]
+                block = np.array(block, dtype='int')
                 available_bits += 35 * 3 # LSB scenario * RGB
                 blocks.append(block)
                 if self.estimation and req_bits <= available_bits:
@@ -229,11 +230,11 @@ class QVD_8D(steganographyAlgorythm):
                     used_bits += data_bits_len
 
                 current_b_message_FOBP = current_b_message #In case of FOBP - Fall of boundary problem
-                middle_value = int(block_list[used_block][1][1][color])
+                middle_value = block_list[used_block][1][1][color]
                 color_array = current_array[color::n_image]
                 color_array = np.delete(color_array, 4)
 
-                quotient_middle_value = int(quotient_block_list[used_block][1][1][color])
+                quotient_middle_value = quotient_block_list[used_block][1][1][color]
                 color_quotient_array = quotient_array[color::n_image]
                 color_quotient_array = np.delete(color_quotient_array, 4)
 
@@ -255,7 +256,6 @@ class QVD_8D(steganographyAlgorythm):
                 quotient_avg = 0
                 fall_of_boundary = False
                 for q_value in color_quotient_array:
-                    q_value = int(q_value)
                     value_d = q_value - quotient_middle_value
                     fall_of_boundary, n, L = self.__calculate_capacity__(np.abs(value_d))
                     if fall_of_boundary:

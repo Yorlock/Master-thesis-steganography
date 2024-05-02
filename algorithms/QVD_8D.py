@@ -7,8 +7,9 @@ import util
 
 # the type parameter allows you to change the capacity of the hidden bits when QVD is used
 # color parameter allows you to specify which color should be used (default is all)
+# k parameter allows you to specify how many bits should be hidden in one byte when LSB is used
 class QVD_8D(steganographyAlgorythm):
-    def __init__(self, end_msg="$t3g0", color="", type=3, estimation = True):
+    def __init__(self, end_msg="$t3g0", color="", type=3, k=4, estimation = True):
         self.stego_img_path = ""
         self.destination_path = ""
         self.msg_extension = ".txt"
@@ -21,6 +22,11 @@ class QVD_8D(steganographyAlgorythm):
             self.color = color
         else:
             self.color = ""
+
+        if k < 1 or k > 7:
+            self.k = 4
+        else:
+            self.k = k
 
         self.estimation = estimation
         self.type_range = np.array([[0,7],[8,15],[16,31],[32,63]])
@@ -180,9 +186,8 @@ class QVD_8D(steganographyAlgorythm):
         if self.color == "":
             color_number = 3
         
-        #liczenie kiedy ejst najmniejsza wartość -> do tego dojdzie k jeszcze
-        if 1 + 2 * 8 + 8 * self.type_capacity[0] * color_number > 35 * color_number:
-            min_bits = 35 * color_number
+        if 1 + 2 * 8 + 8 * self.type_capacity[0] * color_number > (self.k - 1 + self.k * 8) * color_number:
+            min_bits = (self.k - 1 + self.k * 8) * color_number
         else:
             min_bits = 1 + 2 * 8 + 8 * self.type_capacity[0] * color_number
 
@@ -345,11 +350,11 @@ class QVD_8D(steganographyAlgorythm):
         color_array_new = np.empty((0,), int)
         middle_value_bit = bin(middle_value)[2:]
         middle_value_bit = '0' * (8 - len(middle_value_bit)) + middle_value_bit
-        dec_old = int(middle_value_bit[-4:], 2)
-        middle_value_bit_LSB = current_b_message[:3] + '0'
-        current_b_message = current_b_message[3:]
+        dec_old = int(middle_value_bit[-self.k:], 2)
+        middle_value_bit_LSB = current_b_message[:self.k-1] + '0'
+        current_b_message = current_b_message[self.k-1:]
         dec_new = int(middle_value_bit_LSB, 2)
-        middle_value_new = int(middle_value_bit[:4] + middle_value_bit_LSB, 2)
+        middle_value_new = int(middle_value_bit[:self.k] + middle_value_bit_LSB, 2)
         dev = dec_old - dec_new
         if dev > 16 and 0 <= middle_value_new + 32 <= 255:
             middle_value_new += 32
@@ -359,11 +364,11 @@ class QVD_8D(steganographyAlgorythm):
         for value in color_array:
             value_bit = bin(value)[2:]
             value_bit = '0' * (8 - len(value_bit)) + value_bit
-            deci_old = int(value_bit[-4:], 2)
-            value_bit_LSB = current_b_message[:4]
-            current_b_message = current_b_message[4:]
+            deci_old = int(value_bit[-self.k:], 2)
+            value_bit_LSB = current_b_message[:self.k]
+            current_b_message = current_b_message[self.k:]
             deci_new = int(value_bit_LSB, 2)
-            value_new = int(value_bit[:4] + value_bit_LSB, 2)
+            value_new = int(value_bit[:self.k] + value_bit_LSB, 2)
             devi = deci_old - deci_new
             if devi > 16 and 0 <= value_new + 32 <= 255:
                 value_new += 32
@@ -427,11 +432,11 @@ class QVD_8D(steganographyAlgorythm):
 
             LSB = middle_value_bit[-1]
             if LSB == '0': #LSB
-                hidden_bits += middle_value_bit[-4:-1]
+                hidden_bits += middle_value_bit[-self.k:-1]
                 for value in color_array:
                     value_bit = bin(value)[2:]
                     value_bit = '0' * (8 - len(value_bit)) + value_bit
-                    hidden_bits += value_bit[-4:]
+                    hidden_bits += value_bit[-self.k:]
             else: #QVD
                 hidden_bits += middle_value_bit[-2]
                 for value in color_array:

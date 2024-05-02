@@ -185,8 +185,8 @@ class QVD_8D(steganographyAlgorythm):
     def __calculate_capacity__(self, value):
         for index in range(len(self.type_range)):
             if value >= self.type_range[index][0] and value <= self.type_range[index][1]:
-                return False, int(self.type_capacity[index]), int(self.type_range[index][0])
-        return True, 0, 0
+                return int(self.type_capacity[index]), int(self.type_range[index][0])
+        return 0, 0
     
     def __calculate_support_block_bits__(self, block_list):
         quotient_block_list = []
@@ -208,6 +208,8 @@ class QVD_8D(steganographyAlgorythm):
     def __hide_text__(self, req_bits, block_list, quotient_block_list, reminder_block_list, b_message, n_image):
         used_bits = 0
         used_block = -1
+        data_bits_len = 1 + 2*8 + 5*8 #always assume the worst case scenario
+        left_bits = data_bits_len
         while used_bits < req_bits:
             used_block += 1
             current_array = block_list[used_block].flatten()
@@ -217,7 +219,6 @@ class QVD_8D(steganographyAlgorythm):
                 if used_bits >= req_bits:
                     return block_list
 
-                data_bits_len = 1 + 2*8 + 5*8 #always assume the worst case scenario
                 is_end_of_message = False
                 if used_bits+data_bits_len > req_bits:
                     is_end_of_message = True
@@ -257,10 +258,7 @@ class QVD_8D(steganographyAlgorythm):
                 fall_of_boundary = False
                 for q_value in color_quotient_array:
                     value_d = q_value - quotient_middle_value
-                    fall_of_boundary, n, L = self.__calculate_capacity__(np.abs(value_d))
-                    if fall_of_boundary:
-                        break
-
+                    n, L = self.__calculate_capacity__(np.abs(value_d))
                     value_LSB = int(current_b_message[:n], 2)
                     current_b_message = current_b_message[n:]
                     if value_d >= 0:
@@ -275,65 +273,75 @@ class QVD_8D(steganographyAlgorythm):
                     else:
                         quotient_middle_value_2 = int(quotient_middle_value -  np.ceil(m/2))
                         q_value_2 = int(q_value + np.floor(m/2))
+                    
+                    if q_value_2 < 0 or q_value_2 > 63: #LSB
+                            fall_of_boundary = True
+                            break
 
                     quotient_avg += quotient_middle_value_2
                     color_quotient_q_array.append([quotient_middle_value_2, q_value_2])
                 
-                color_array_new = np.empty((0,), int)
-                if fall_of_boundary: #LSB
-                    middle_value_bit = bin(middle_value)[2:]
-                    middle_value_bit = middle_value_bit[4:]
-                    dec_old = int(middle_value_bit, 2)
-                    middle_value_bit = '0' * (8 - len(middle_value_bit)) + middle_value_bit
-                    middle_value_bit_LSB = middle_value_bit[-4:]
-                    middle_value_bit_LSB[3] = '0'
-                    middle_value_bit_LSB[0:3] = current_b_message_FOBP[:3]
-                    current_b_message_FOBP = current_b_message_FOBP[3:]
-                    dec_new = int(middle_value_bit_LSB, 2)
-                    middle_value_new = int(middle_value_bit[:4] + middle_value_bit_LSB, 2)
-
-                    dev = dec_old - dec_new
-                    if dev > 16 and 0 <= middle_value_new + 32 <=255:
-                        middle_value_new += 32
-                    elif dev < -16 and 0 <= middle_value_new - 32 <=255:
-                        middle_value_new -= 32
-
-                    for value in color_array:
-                        value_bits = bin(value)[2:]
-                        value_bits = value_bits[4:]
-                        deci_old = int(value_bits, 2)
-                        value_bits = '0' * (8 - len(value_bits)) + value_bits
-                        value_bits_LSB = value_bits[-4:]
-                        value_bits_LSB = current_b_message_FOBP[:4]
-                        current_b_message_FOBP = current_b_message_FOBP[4:]
-                        deci_new = int(value_bits_LSB, 2)
-                        value_new = int(value_bits[:4] + value_bits_LSB, 2)
-                        devi = deci_old - deci_new
-                        if devi > 16 and 0 <= value_new + 32 <=255:
-                            value_new += 32
-                        elif devi < -16 and 0 <= value_new - 32 <=255:
-                            value_new -= 32
-                        color_array_new = color_array_new.append(color_array_new, int(value_new))
-                        
-                    color_array_new = np.insert(color_array_new, 4, middle_value_new)
-                    if not is_end_of_message:
-                        used_bits -= len(current_b_message_FOBP)
-                else: #QVD
+                if not fall_of_boundary: #QVD
+                    color_array_new = np.empty((0,), int)
                     quotient_middle_value_avg = int(np.ceil(quotient_avg / 8))
+                    middle_value_new = quotient_middle_value_avg * 4 + middle_value_LSB_int
                     for i in range(8):
                         Q_i = color_quotient_q_array[i][1] + (quotient_middle_value_avg - color_quotient_q_array[i][0])
+                        if Q_i < 0 or Q_i > 63: #LSB
+                            fall_of_boundary = True
+                            break
+
                         value_new = Q_i * 4 + color_reminder_2_array[i]
                         color_array_new = np.append(color_array_new, value_new)
 
-                    middle_value_new = quotient_middle_value_avg * 4 + middle_value_LSB_int
+                if not fall_of_boundary:
                     color_array_new = np.insert(color_array_new, 4, middle_value_new)
-                    if not is_end_of_message:
-                        used_bits -= len(current_b_message)
+                else:
+                    current_b_message, color_array_new = self.__hide_text_fall_of_boundary__(middle_value, current_b_message_FOBP, color_array)
+
+                if not is_end_of_message:
+                    used_bits -= len(current_b_message)
+                elif data_bits_len - left_bits < len(current_b_message):
+                    used_bits -= len(current_b_message) - (data_bits_len - left_bits)
 
                 self.__write_new_value_to_block__(color_array_new, block_list[used_block], color)
 
         return block_list
     
+    def __hide_text_fall_of_boundary__(self, middle_value, current_b_message, color_array):
+        color_array_new = np.empty((0,), int)
+        middle_value_bit = bin(middle_value)[2:]
+        middle_value_bit = '0' * (8 - len(middle_value_bit)) + middle_value_bit
+        dec_old = int(middle_value_bit[-4:], 2)
+        middle_value_bit_LSB = current_b_message[:3] + '0'
+        current_b_message = current_b_message[3:]
+        dec_new = int(middle_value_bit_LSB, 2)
+        middle_value_new = int(middle_value_bit[:4] + middle_value_bit_LSB, 2)
+        dev = dec_old - dec_new
+        if dev > 16 and 0 <= middle_value_new + 32 <= 255:
+            middle_value_new += 32
+        elif dev < -16 and 0 <= middle_value_new - 32 <= 255:
+            middle_value_new -= 32
+
+        for value in color_array:
+            value_bit = bin(value)[2:]
+            value_bit = '0' * (8 - len(value_bit)) + value_bit
+            deci_old = int(value_bit[-4:], 2)
+            value_bit_LSB = current_b_message[:4]
+            current_b_message = current_b_message[4:]
+            deci_new = int(value_bit_LSB, 2)
+            value_new = int(value_bit[:4] + value_bit_LSB, 2)
+            devi = deci_old - deci_new
+            if devi > 16 and 0 <= value_new + 32 <= 255:
+                value_new += 32
+            elif devi < -16 and 0 <= value_new - 32 <= 255:
+                value_new -= 32
+            
+            color_array_new = np.append(color_array_new, int(value_new))
+            
+        color_array_new = np.insert(color_array_new, 4, middle_value_new)
+        return current_b_message, color_array_new
+
     def __write_new_value_to_block__(self, array, block, color):
         x = 0
         y = 0
@@ -402,7 +410,7 @@ class QVD_8D(steganographyAlgorythm):
                 for value in color_array:
                     Q = value // 4
                     d = np.abs(Qc - Q)
-                    _, n, L  = self.__calculate_capacity__(d)
+                    n, L  = self.__calculate_capacity__(d)
                     b_value = int(np.floor(np.abs(d - L)))
                     b_bit = bin(b_value)[2:]
                     b_bit = '0' * (8 - len(b_bit)) + b_bit

@@ -12,11 +12,10 @@ class Test_LSB_SINE(unittest.TestCase):
 
     def setUp(self):
         util.init_instance()
-        #util.clean_result()
+        util.clean_result()
     
     def tearDown(self):
-        #util.clean_all()
-        temp = 1
+        util.clean_all()
 
     def test_LSB_SINE_secret_1(self):
         alg = LSB_SINE(end_msg="$t3g0", round_accuracy=2, sine_phase=1.0)

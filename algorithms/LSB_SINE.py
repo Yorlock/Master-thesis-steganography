@@ -187,7 +187,7 @@ class LSB_SINE(steganographyAlgorythm):
                 if color_MSB_3 == '000':
                     BIT_index = 1
 
-                block_bits += str(util.get_bit_value(array[pixel_index][color], BIT_index))
+                block_bits += str(self.get_bit_value(array[pixel_index][color], BIT_index))
 
             hidden_bits = [block_bits[i:i+8] for i in range(0, len(block_bits), 8)]
             if hidden_bits[len(hidden_bits) - 1] != 8:
@@ -216,11 +216,19 @@ class LSB_SINE(steganographyAlgorythm):
         self.is_success = True
     
     def __get_MSB_3__(self, number):
-        bit_8 = util.get_bit_value(number, 7)
-        bit_7 = util.get_bit_value(number, 6)
-        bit_6 = util.get_bit_value(number, 5)
+        bit_8 = self.get_bit_value(number, 7)
+        bit_7 = self.get_bit_value(number, 6)
+        bit_6 = self.get_bit_value(number, 5)
         return rf"{bit_8}{bit_7}{bit_6}"
     
+    def get_bit_value(self, number, n):
+        # Create a mask with a 1 at the nth position
+        mask = 1 << n
+
+        # Perform bitwise AND operation with the number and mask
+        # If the result is non-zero, the bit at position n is 1, otherwise, it's 0
+        return (number & mask) >> n
+
     def __calculate_available_bits__(self, total_pixels, req_bits, w, h):
         pixel_index = 0
         available_bits = 0

@@ -12,11 +12,10 @@ class Test_chain_LSB(unittest.TestCase):
 
     def setUp(self):
         util.init_instance()
-        #util.clean_result()
+        util.clean_result()
     
     def tearDown(self):
-        #util.clean_all()
-        temp = 1
+        util.clean_all()
 
     def test_chain_LSB_secret_1(self):
         alg = chain_LSB(k=0, end_msg="$t3g0")

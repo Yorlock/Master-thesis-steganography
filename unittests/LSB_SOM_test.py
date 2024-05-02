@@ -12,11 +12,10 @@ class Test_LSB_SOM(unittest.TestCase):
 
     def setUp(self):
         util.init_instance()
-        #util.clean_result()
+        util.clean_result()
     
     def tearDown(self):
-        #util.clean_all()
-        temp = 1
+        util.clean_all()
 
     def test_LSB_SOM_secret_1_k_1(self):
         alg = LSB_SOM(k=1)

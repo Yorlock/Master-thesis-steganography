@@ -1,8 +1,10 @@
 from PIL import Image
-from util import AESCipher
 import numpy as np
 import math
 import base64
+import hashlib
+from Crypto import Random
+from Crypto.Cipher import AES
 
 from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
@@ -115,7 +117,7 @@ class LSB_PF(steganographyAlgorythm):
                     if block == 0: # we cannot do XOR on bit and then modify that bit -> wrong result
                         new_value = int(bit)
                     else:
-                        block_value = util.get_bit_value(array[index_pixel][change_color], block)
+                        block_value = self.get_bit_value(array[index_pixel][change_color], block)
                         new_value = (block_value ^ int(bit))
                     
                     array[index_pixel][change_color] = (array[index_pixel][change_color] & 254) + new_value
@@ -166,11 +168,11 @@ class LSB_PF(steganographyAlgorythm):
 
             block = password_blocks[index_block % blocks_len]
             index_block += 1
-            hide_value = util.get_bit_value(array[p][change_color], block)
+            hide_value = self.get_bit_value(array[p][change_color], block)
             if block == 0:
                 hidden_bits += str(hide_value)
             else:
-                LSB_value = util.get_bit_value(array[p][change_color], 0)
+                LSB_value = self.get_bit_value(array[p][change_color], 0)
                 if LSB_value == 1:
                     hidden_bits += str(self.__reverse_value__(hide_value))
                 else:
@@ -206,9 +208,9 @@ class LSB_PF(steganographyAlgorythm):
         colors_pixels_index = [[], [], []] # red green blue; true = MSB is 1, false = MSB is 0
         bit = 7
         for p in range(total_pixels):
-            red = util.get_bit_value(array[p][0], bit)
-            green = util.get_bit_value(array[p][1], bit)
-            blue = util.get_bit_value(array[p][2], bit)
+            red = self.get_bit_value(array[p][0], bit)
+            green = self.get_bit_value(array[p][1], bit)
+            blue = self.get_bit_value(array[p][2], bit)
             colors[0] += red
             colors[1] += green
             colors[2] += blue
@@ -219,7 +221,40 @@ class LSB_PF(steganographyAlgorythm):
         MSB_filter = colors.index(max(colors))
         return colors[MSB_filter], colors_pixels_index[MSB_filter]
     
+    def get_bit_value(self, number, n):
+        # Create a mask with a 1 at the nth position
+        mask = 1 << n
+
+        # Perform bitwise AND operation with the number and mask
+        # If the result is non-zero, the bit at position n is 1, otherwise, it's 0
+        return (number & mask) >> n
+
     def __reverse_value__(self, value):
         if value == 1:
             return '0'
         return '1'
+    
+class AESCipher(object):
+
+    def __init__(self, key):
+        self.bs = AES.block_size
+        self.key = hashlib.sha256(key.encode()).digest()
+
+    def encrypt(self, raw):
+        raw = self._pad(raw)
+        iv = Random.new().read(AES.block_size)
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return base64.b64encode(iv + cipher.encrypt(raw.encode()))
+
+    def decrypt(self, enc):
+        enc = base64.b64decode(enc)
+        iv = enc[:AES.block_size]
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return AESCipher._unpad(cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
+
+    def _pad(self, s):
+        return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
+
+    @staticmethod
+    def _unpad(s):
+        return s[:-ord(s[len(s)-1:])]

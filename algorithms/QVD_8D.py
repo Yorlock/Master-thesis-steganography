@@ -268,25 +268,25 @@ class QVD_8D(steganographyAlgorythm):
                     
                     m = value_d_2 - value_d
                     if value_d%2 == 0:
-                        quotient_middle_value_2 = int(quotient_middle_value -  np.floor(m/2))
+                        q_middle_value_2 = int(quotient_middle_value -  np.floor(m/2))
                         q_value_2 = int(q_value + np.ceil(m/2))
                     else:
-                        quotient_middle_value_2 = int(quotient_middle_value -  np.ceil(m/2))
+                        q_middle_value_2 = int(quotient_middle_value -  np.ceil(m/2))
                         q_value_2 = int(q_value + np.floor(m/2))
                     
-                    if q_value_2 < 0 or q_value_2 > 63: #LSB
+                    if (q_value_2 < 0 or q_value_2 > 63) or (q_middle_value_2 < 0 or q_middle_value_2 > 63): #LSB
                             fall_of_boundary = True
                             break
 
-                    quotient_avg += quotient_middle_value_2
-                    color_quotient_q_array.append([quotient_middle_value_2, q_value_2])
+                    quotient_avg += q_middle_value_2
+                    color_quotient_q_array.append([q_middle_value_2, q_value_2])
                 
                 if not fall_of_boundary: #QVD
                     color_array_new = np.empty((0,), int)
-                    quotient_middle_value_avg = int(np.ceil(quotient_avg / 8))
-                    middle_value_new = quotient_middle_value_avg * 4 + middle_value_LSB_int
+                    q_middle_value_avg = int(np.ceil(quotient_avg / 8))
+                    middle_value_new = q_middle_value_avg * 4 + middle_value_LSB_int
                     for i in range(8):
-                        Q_i = color_quotient_q_array[i][1] + (quotient_middle_value_avg - color_quotient_q_array[i][0])
+                        Q_i = color_quotient_q_array[i][1] + (q_middle_value_avg - color_quotient_q_array[i][0])
                         if Q_i < 0 or Q_i > 63: #LSB
                             fall_of_boundary = True
                             break
@@ -337,7 +337,7 @@ class QVD_8D(steganographyAlgorythm):
             elif devi < -16 and 0 <= value_new - 32 <= 255:
                 value_new -= 32
             
-            color_array_new = np.append(color_array_new, int(value_new))
+            color_array_new = np.append(color_array_new, value_new)
             
         color_array_new = np.insert(color_array_new, 4, middle_value_new)
         return current_b_message, color_array_new
@@ -411,7 +411,7 @@ class QVD_8D(steganographyAlgorythm):
                     Q = value // 4
                     d = np.abs(Qc - Q)
                     n, L  = self.__calculate_capacity__(d)
-                    b_value = int(np.floor(np.abs(d - L)))
+                    b_value = int(np.abs(d - L))
                     b_bit = bin(b_value)[2:]
                     b_bit = '0' * (8 - len(b_bit)) + b_bit
                     hidden_bits += b_bit[-n:]

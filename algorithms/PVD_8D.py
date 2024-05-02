@@ -183,6 +183,7 @@ class PVD_8D(steganographyAlgorythm):
                 start_row = i * 3
                 start_col = j * 3
                 block = matrix[start_row:start_row+3, start_col:start_col+3]
+                block = np.array(block, dtype='int')
                 available_bits += self.t * 3 + self.type_capacity[0] * 8 * 3
                 blocks.append(block)
                 if self.estimation and req_bits <= available_bits:
@@ -200,7 +201,7 @@ class PVD_8D(steganographyAlgorythm):
     def __calculate_capacity__(self, value):
         for index in range(len(self.type_range)):
             if value >= self.type_range[index][0] and value <= self.type_range[index][1]:
-                return self.type_capacity[index], self.type_range[index][0]
+                return int(self.type_capacity[index]), int(self.type_range[index][0])
         return 0, 0
     
     def __hide_text__(self, req_bits, block_list, b_message, n):
@@ -215,9 +216,8 @@ class PVD_8D(steganographyAlgorythm):
 
                 if used_bits+self.t > req_bits:
                     left_bits = req_bits - used_bits
-                    middle_value_chonk_bit = self.__get_pixel_value__(block_list[used_block][1][1][color], self.t - left_bits)
                     message_value_bit = b_message[used_bits:used_bits+left_bits]
-                    message_value_bit = message_value_bit + middle_value_chonk_bit
+                    message_value_bit = message_value_bit + '0' * (self.t - left_bits)
                     used_bits += left_bits
                 else:
                     message_value_bit = b_message[used_bits:used_bits+self.t]
@@ -251,9 +251,8 @@ class PVD_8D(steganographyAlgorythm):
                     t, L = self.__calculate_capacity__(d)
                     if used_bits+t > req_bits:
                         left_bits = req_bits - used_bits
-                        middle_value_chonk_bit = self.__get_pixel_value__(P, t - left_bits)
                         message_value_bit = b_message[used_bits:used_bits+left_bits]
-                        message_value_bit = message_value_bit + middle_value_chonk_bit
+                        message_value_bit = message_value_bit + '0' * (self.t - left_bits)
                         S = int(message_value_bit,2)
                         used_bits += left_bits
                     else:

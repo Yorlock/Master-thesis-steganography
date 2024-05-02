@@ -207,9 +207,17 @@ class QVD_8D(steganographyAlgorythm):
     def __get_pixel_value__(self, pixel, num_bits):
         bits = ''
         for i in range(num_bits-1,-1,-1):
-            bits += str(util.get_bit_value(pixel, i))
+            bits += str(self.get_bit_value(pixel, i))
         
         return bits
+
+    def get_bit_value(self, number, n):
+        # Create a mask with a 1 at the nth position
+        mask = 1 << n
+
+        # Perform bitwise AND operation with the number and mask
+        # If the result is non-zero, the bit at position n is 1, otherwise, it's 0
+        return (number & mask) >> n
 
     def __calculate_capacity__(self, value):
         for index in range(len(self.type_range)):

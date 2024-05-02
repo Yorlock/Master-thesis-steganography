@@ -169,7 +169,7 @@ class LSB_SOM(steganographyAlgorythm):
         for p in range(total_pixels):
             for q in range(0, 3):
                 for bit in range(self.k):
-                    msg_size_b += str(util.get_bit_value(array[p][q], bit))
+                    msg_size_b += str(self.get_bit_value(array[p][q], bit))
                     loop_counter -= 1
                     if loop_counter == 0:
                         return msg_size_b, SOM_bit_len
@@ -179,7 +179,15 @@ class LSB_SOM(steganographyAlgorythm):
         for p in range(total_pixels):
             for q in range(0, 3):
                 for bit in range(self.k):
-                    hidden_bits += str(util.get_bit_value(array[p][q], bit))
+                    hidden_bits += str(self.get_bit_value(array[p][q], bit))
                     loop_counter -= 1
                     if loop_counter == 0:
                         return hidden_bits
+
+    def get_bit_value(self, number, n):
+        # Create a mask with a 1 at the nth position
+        mask = 1 << n
+
+        # Perform bitwise AND operation with the number and mask
+        # If the result is non-zero, the bit at position n is 1, otherwise, it's 0
+        return (number & mask) >> n

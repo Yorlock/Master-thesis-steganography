@@ -5,9 +5,10 @@ import math
 from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
+# the type parameter allows you to change the capacity of the hidden bits when QVD is used
 # color parameter allows you to specify which color should be used (default is all)
 class QVD_8D(steganographyAlgorythm):
-    def __init__(self, end_msg="$t3g0", color = "", estimation = True):
+    def __init__(self, end_msg="$t3g0", color="", type=3, estimation = True):
         self.stego_img_path = ""
         self.destination_path = ""
         self.msg_extension = ".txt"
@@ -23,7 +24,14 @@ class QVD_8D(steganographyAlgorythm):
 
         self.estimation = estimation
         self.type_range = np.array([[0,7],[8,15],[16,31],[32,63]])
-        self.type_capacity = np.array([3, 3, 4, 5])
+        if type == 0:
+            self.type_capacity = np.array([1, 1, 1, 1])
+        elif type == 1:
+            self.type_capacity = np.array([2, 2, 3, 4])
+        elif type == 2:
+            self.type_capacity = np.array([1, 1, 2, 3])
+        else:
+            self.type_capacity = np.array([3, 3, 4, 5])
 
     @property
     def is_success(self):
@@ -171,6 +179,12 @@ class QVD_8D(steganographyAlgorythm):
         color_number = 1
         if self.color == "":
             color_number = 3
+        
+        #liczenie kiedy ejst najmniejsza wartość -> do tego dojdzie k jeszcze
+        if 1 + 2 * 8 + 8 * self.type_capacity[0] * color_number > 35 * color_number:
+            min_bits = 35 * color_number
+        else:
+            min_bits = 1 + 2 * 8 + 8 * self.type_capacity[0] * color_number
 
         for i in range(num_blocks_row):
             for j in range(num_blocks_col):
@@ -178,7 +192,7 @@ class QVD_8D(steganographyAlgorythm):
                 start_col = j * 3
                 block = matrix[start_row:start_row+3, start_col:start_col+3]
                 block = np.array(block, dtype='int')
-                available_bits += 35 * color_number # LSB scenario * RGB
+                available_bits += min_bits
                 blocks.append(block)
                 if self.estimation and req_bits <= available_bits:
                     return available_bits, blocks

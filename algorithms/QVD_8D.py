@@ -5,9 +5,9 @@ import math
 from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
-#Type 1 possesses higher PSNR and type 2 possesses higher hiding capacity
+# color parameter allows you to specify which color should be used (default is all)
 class QVD_8D(steganographyAlgorythm):
-    def __init__(self, end_msg="$t3g0", estimation = True):
+    def __init__(self, end_msg="$t3g0", color = "", estimation = True):
         self.stego_img_path = ""
         self.destination_path = ""
         self.msg_extension = ".txt"
@@ -15,6 +15,12 @@ class QVD_8D(steganographyAlgorythm):
         self.is_success = False
         self.error_msg = ""
         self.end_msg = end_msg
+        self.colors = ['R', 'G', 'B']
+        if color in self.colors:
+            self.color = color
+        else:
+            self.color = ""
+
         self.estimation = estimation
         self.type_range = np.array([[0,7],[8,15],[16,31],[32,63]])
         self.type_capacity = np.array([3, 3, 4, 5])
@@ -162,13 +168,17 @@ class QVD_8D(steganographyAlgorythm):
         blocks = []
         num_blocks_row = rows // 3
         num_blocks_col = cols // 3
+        color_number = 1
+        if self.color == "":
+            color_number = 3
+
         for i in range(num_blocks_row):
             for j in range(num_blocks_col):
                 start_row = i * 3
                 start_col = j * 3
                 block = matrix[start_row:start_row+3, start_col:start_col+3]
                 block = np.array(block, dtype='int')
-                available_bits += 35 * 3 # LSB scenario * RGB
+                available_bits += 35 * color_number # LSB scenario * RGB
                 blocks.append(block)
                 if self.estimation and req_bits <= available_bits:
                     return available_bits, blocks
@@ -187,14 +197,22 @@ class QVD_8D(steganographyAlgorythm):
             if value >= self.type_range[index][0] and value <= self.type_range[index][1]:
                 return int(self.type_capacity[index]), int(self.type_range[index][0])
         return 0, 0
-    
+
+    def __get_color_range__(self):
+        if self.color == "":
+            return 0, 3
+
+        color = self.colors.index(self.color)
+        return color, color + 1
+
     def __calculate_support_block_bits__(self, block_list):
         quotient_block_list = []
         reminder_block_list = []
         for block in block_list:
             block_quotient = block.copy()
             block_reminder = block.copy()
-            for color in range(3):
+            color_init, color_end = self.__get_color_range__()
+            for color in range(color_init, color_end):
                 for x in range(3):
                     for y in range(3):
                         block_quotient[x][y][color] = block_quotient[x][y][color] // 4
@@ -210,12 +228,13 @@ class QVD_8D(steganographyAlgorythm):
         used_block = -1
         data_bits_len = 1 + 2*8 + 5*8 #always assume the worst case scenario
         left_bits = data_bits_len
+        color_init, color_end = self.__get_color_range__()
         while used_bits < req_bits:
             used_block += 1
             current_array = block_list[used_block].flatten()
             quotient_array = quotient_block_list[used_block].flatten()
-            reminder_array = reminder_block_list[used_block].flatten()
-            for color in range(3):
+            reminder_array = reminder_block_list[used_block].flatten()     
+            for color in range(color_init, color_end):
                 if used_bits >= req_bits:
                     return block_list
 
@@ -384,7 +403,8 @@ class QVD_8D(steganographyAlgorythm):
     def __get_hidden_text_from_block__(self, block, n_image):
         hidden_bits = ""
         array = block.flatten()
-        for color in range(3):
+        color_init, color_end = self.__get_color_range__()
+        for color in range(color_init, color_end):
             middle_value = int(block[1][1][color])
             middle_value_bit = bin(middle_value)[2:]
             middle_value_bit = '0' * (8 - len(middle_value_bit)) + middle_value_bit

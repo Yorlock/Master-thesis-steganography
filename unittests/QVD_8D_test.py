@@ -41,6 +41,30 @@ class Test_QVD_8D(unittest.TestCase):
         self.assertTrue(alg.is_success)
         self.assertTrue(filecmp.cmp(util.get_secret_msg(2), alg.destination_path))
 
+    def test_QVD_8D_secret_2_color_R(self):
+        alg = QVD_8D(end_msg="$t3g0", color='R')
+        alg.encode(util.get_carrier_color(2), util.get_secret_msg(2))
+        self.assertTrue(alg.is_success)
+        alg.decode()
+        self.assertTrue(alg.is_success)
+        self.assertTrue(filecmp.cmp(util.get_secret_msg(2), alg.destination_path))
+
+    def test_QVD_8D_secret_2_color_G(self):
+        alg = QVD_8D(end_msg="$t3g0", color='G')
+        alg.encode(util.get_carrier_color(2), util.get_secret_msg(2))
+        self.assertTrue(alg.is_success)
+        alg.decode()
+        self.assertTrue(alg.is_success)
+        self.assertTrue(filecmp.cmp(util.get_secret_msg(2), alg.destination_path))
+
+    def test_QVD_8D_secret_2_color_B(self):
+        alg = QVD_8D(end_msg="$t3g0", color='B')
+        alg.encode(util.get_carrier_color(2), util.get_secret_msg(2))
+        self.assertTrue(alg.is_success)
+        alg.decode()
+        self.assertTrue(alg.is_success)
+        self.assertTrue(filecmp.cmp(util.get_secret_msg(2), alg.destination_path))
+
     def test_QVD_8D_secret_3(self):
         alg = QVD_8D(end_msg="$t3g0")
         alg.encode(util.get_carrier_color(2), util.get_secret_msg(3))
@@ -64,6 +88,11 @@ class Test_QVD_8D(unittest.TestCase):
         alg.decode()
         self.assertTrue(alg.is_success)
         self.assertTrue(filecmp.cmp(util.get_secret_msg(5), alg.destination_path))
+
+    def test_QVD_8D_secret_4_color_R_message_too_large(self):
+        alg = QVD_8D(end_msg="$t3g0", color='R')
+        alg.encode(util.get_carrier_color(2), util.get_secret_msg(4))
+        self.assertFalse(alg.is_success)
 
     def test_QVD_8D_secret_5_high_pixel_difference(self):
         alg = QVD_8D(end_msg="$t3g0")

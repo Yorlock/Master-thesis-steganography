@@ -7,6 +7,7 @@ from algorithms.PVD_8D import PVD_8D
 from algorithms.LSB_SINE import LSB_SINE
 from algorithms.BPCS import BPCS
 from algorithms.chain_LSB import chain_LSB
+from algorithms.n_RMBR import n_RMBR
 import util
 
 # define object and run it  in the provided sample
@@ -39,6 +40,6 @@ def example3():
 if __name__ == '__main__':
     util.init_instance()
     util.clean_result()
-    util.clean_all()
+    #util.clean_all()
 
-    #example1()
+    example1()

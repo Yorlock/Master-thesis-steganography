@@ -1,22 +1,32 @@
 from PIL import Image
 import numpy as np
+import math
 
 from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
-class LSB_EOM(steganographyAlgorythm):
-    def __init__(self, end_msg="$t3g0", k=1):
+# the type parameter allows you to change the capacity of the hidden bits when QVD is used
+# color parameter allows you to specify which color should be used (default is all)
+# k parameter allows you to specify how many bits should be hidden in one byte when LSB is used
+class n_RMBR(steganographyAlgorythm):
+    def __init__(self, end_msg="$t3g0", color="", n=4):
         self.stego_img_path = ""
         self.destination_path = ""
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False
         self.error_msg = ""
-        self.k = k
         self.end_msg = end_msg
-        if k > 8:
-            self.k = 7
-            self.error_msg += "The value of parameter k has been changed to 7."
+        self.colors = ['R', 'G', 'B']
+        if color in self.colors:
+            self.color = color
+        else:
+            self.color = ""
+
+        if n < 1 or n > 4:
+            self.n = 4
+        else:
+            self.n = n
 
     @property
     def is_success(self):
@@ -89,13 +99,16 @@ class LSB_EOM(steganographyAlgorythm):
         b_message = ''.join([format(ord(i), "08b") for i in message])
         req_bits = len(b_message)
 
-        if req_bits > total_pixels * 3 * self.k:
+        color_number = 1
+        if self.color == "":
+            color_number = 3
+
+        if req_bits > total_pixels * color_number * self.n:
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return
-        else:
-            array = self.__hide_text__(total_pixels, req_bits, array, b_message)
 
+        array = self.__hide_text__(total_pixels, req_bits, array, b_message)
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
 
@@ -122,7 +135,7 @@ class LSB_EOM(steganographyAlgorythm):
         hidden_bits = ""
         block_bits = ""
         message = ""
-        
+        color_init, color_end = self.__get_color_range__()
         is_end = False
         left_bits = ''
         for p in range(total_pixels):
@@ -130,10 +143,10 @@ class LSB_EOM(steganographyAlgorythm):
                 break
 
             block_bits = left_bits
-            for color in range(0, 3):
+            for color in range(color_init, color_end):
                 value_bit = bin(array[p][color])[2:]
                 value_bit = '0' * (8 - len(value_bit)) + value_bit
-                block_bits += value_bit[-self.k:]
+                block_bits += value_bit[-self.n:]
 
             hidden_bits = [block_bits[i:i+8] for i in range(0, len(block_bits), 8)]
             if hidden_bits[len(hidden_bits) - 1] != 8:
@@ -161,21 +174,44 @@ class LSB_EOM(steganographyAlgorythm):
 
         self.is_success = True
 
+    def __get_color_range__(self):
+        if self.color == "":
+            return 0, 3
+
+        color = self.colors.index(self.color)
+        return color, color + 1
+
     def __hide_text__(self, total_pixels, req_bits, array, b_message):
+        color_init, color_end = self.__get_color_range__()
         index = 0
         for p in range(total_pixels):
-            for color in range(0, 3):
+            for color in range(color_init, color_end):
                 if index >= req_bits:
                     return array
 
                 value_old = array[p][color]
                 value_old_int = bin(value_old)[2:]
                 value_old_int = '0' * (8 - len(value_old_int)) + value_old_int
-                b_message_bit = b_message[index:index+self.k]
-                b_message_bit = '0' * (self.k - len(b_message_bit)) + b_message_bit
-                value_new_int = value_old_int[:8-self.k] + b_message_bit
-                value_new = int(value_new_int, 2)
-                index += self.k
+                dec_1 = int(value_old_int[-self.n:], 2)
+                dec_2 = int(b_message[index:index+self.n], 2)
+                index += self.n
+                d = dec_1 - dec_2
+                P_1 = value_old - d
+                P_2 = value_old - np.power(2, self.n)
+                P_3 = value_old + np.power(2, self.n)
+                d_1 = np.abs(value_old - P_1)
+                d_2 = np.abs(value_old - P_2)
+                d_3 = np.abs(value_old - P_3)
+                value_new = P_1
+                if d_1 <= d_2 and d_1 <= d_3 and 0 <= P_1 <= 255:
+                    value_new = P_1
+                elif d_2 <= d_1 and d_2 <= d_3 and 0 <= P_2 <= 255:
+                    value_new = P_2
+                elif d_3 <= d_1 and d_3 <= d_2 and 0 <= P_2 <= 255:
+                    value_new = P_3
+                elif P_2 <= P_1 and 0 <= P_2 <= 255:
+                    value_new = P_2
+                
                 array[p][color] = value_new
 
         return array

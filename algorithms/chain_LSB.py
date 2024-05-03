@@ -94,15 +94,15 @@ class chain_LSB(steganographyAlgorythm):
         message += self.end_msg
         b_message = ''.join([format(ord(i), "08b") for i in message])
         req_bits = len(b_message)
-        req_chonks = int(np.ceil(req_bits/self.k)) #chonks required for msg
-        possible_chonks = int(np.floor(((total_pixels*3) - pointer_length)/(pointer_length + self.k))) #possible chonks in image
+        req_chunks = int(np.ceil(req_bits/self.k)) #chunks required for msg
+        possible_chunks = int(np.floor(((total_pixels*3) - pointer_length)/(pointer_length + self.k))) #possible chunks in image
 
-        if req_chonks > possible_chonks:
+        if req_chunks > possible_chunks:
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size or larger k."
             return
         else:
-            array = self.__hide_text__(pointer_length, b_message, req_chonks, possible_chonks, array)
+            array = self.__hide_text__(pointer_length, b_message, req_chunks, possible_chunks, array)
 
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
@@ -143,14 +143,14 @@ class chain_LSB(steganographyAlgorythm):
         p = pointer_length // 3
         q = pointer_length % 3
         while True:                     
-            b_next_chonk_position=""
+            b_next_chunk_position=""
             for i in range(pointer_length):
-                b_next_chonk_position += str(array[((p*3)+q+i)//3][(q+i)%3]%2)
-            next_chonk_position = int(b_next_chonk_position, 2)
+                b_next_chunk_position += str(array[((p*3)+q+i)//3][(q+i)%3]%2)
+            next_chunk_position = int(b_next_chunk_position, 2)
             for i in range(k):
                 hidden_bits += str(array[((p*3)+i+q+pointer_length)//3][(q+i+pointer_length)%3]%2)
-            p, q = self.__p_and_q_from_chonk__(next_chonk_position)
-            if next_chonk_position == 0:
+            p, q = self.__p_and_q_from_chunk__(next_chunk_position)
+            if next_chunk_position == 0:
                 break
 
         while len(hidden_bits) % 8 != 0:
@@ -176,12 +176,12 @@ class chain_LSB(steganographyAlgorythm):
 
         self.is_success = True
 
-    def __hide_text__(self, pointer_length, b_message, req_chonks, possible_chonks, array):
-        messages_chonks = self.__split_string_into_substrings__(b_message, self.k)
-        chonks_list = range(1, possible_chonks)
-        chonks_list_positions = [pointer_length + (el * (pointer_length+self.k)) for el in chonks_list]
-        chosen_chonks = np.random.choice(chonks_list_positions, req_chonks-1, replace=False)
-        chosen_chonks = [pointer_length] + list(chosen_chonks) + [0]
+    def __hide_text__(self, pointer_length, b_message, req_chunks, possible_chunks, array):
+        messages_chunks = self.__split_string_into_substrings__(b_message, self.k)
+        chunks_list = range(1, possible_chunks)
+        chunks_list_positions = [pointer_length + (el * (pointer_length+self.k)) for el in chunks_list]
+        chosen_chunks = np.random.choice(chunks_list_positions, req_chunks-1, replace=False)
+        chosen_chunks = [pointer_length] + list(chosen_chunks) + [0]
         counter = 0
         b_k = str(bin(self.k)[2:]).rjust(pointer_length,'0')
         for el in b_k:
@@ -190,17 +190,17 @@ class chain_LSB(steganographyAlgorythm):
             else:
                 array[counter//3][counter%3] = self.__set_to_1__(int(array[counter//3][counter%3]))
             counter += 1
-        for id, messages_chonk in enumerate(messages_chonks):
-            p, q = self.__p_and_q_from_chonk__(chosen_chonks[id])
-            next_chonk_position = chosen_chonks[id+1]
+        for id, messages_chunk in enumerate(messages_chunks):
+            p, q = self.__p_and_q_from_chunk__(chosen_chunks[id])
+            next_chunk_position = chosen_chunks[id+1]
             counter = 0
-            for el in str(bin(next_chonk_position)[2:]).rjust(pointer_length,'0'):
+            for el in str(bin(next_chunk_position)[2:]).rjust(pointer_length,'0'):
                 if int(el) == 0:
                     array[((p*3)+counter+q)//3][(q+counter)%3] = self.__set_to_0__(int(array[((p*3)+counter+q)//3][(q+counter)%3]))
                 else:
                     array[((p*3)+counter+q)//3][(q+counter)%3] = self.__set_to_1__(int(array[((p*3)+counter+q)//3][(q+counter)%3]))
                 counter += 1
-            for el in messages_chonk:
+            for el in messages_chunk:
                 if int(el) == 0:
                     array[((p*3)+counter+q)//3][(q+counter)%3] = self.__set_to_0__(int(array[((p*3)+counter+q)//3][(q+counter)%3]))
                 else:
@@ -224,7 +224,7 @@ class chain_LSB(steganographyAlgorythm):
         substrings = [string[i:i+k] for i in range(0, len(string), k)]
         return substrings
     
-    def __p_and_q_from_chonk__(self, chonk):
-        p = chonk // 3
-        q = chonk % 3
+    def __p_and_q_from_chunk__(self, chunk):
+        p = chunk // 3
+        q = chunk % 3
         return p, q

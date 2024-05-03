@@ -216,10 +216,9 @@ class LSB_SINE(steganographyAlgorythm):
         self.is_success = True
     
     def __get_MSB_3__(self, number):
-        bit_8 = self.get_bit_value(number, 7)
-        bit_7 = self.get_bit_value(number, 6)
-        bit_6 = self.get_bit_value(number, 5)
-        return rf"{bit_8}{bit_7}{bit_6}"
+        number_bit = bin(number)[2:]
+        number_bit = '0' * (8 - len(number_bit)) + number_bit
+        return number_bit[:3]
     
     def get_bit_value(self, number, n):
         # Create a mask with a 1 at the nth position

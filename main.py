@@ -8,6 +8,7 @@ from algorithms.LSB_SINE import LSB_SINE
 from algorithms.BPCS import BPCS
 from algorithms.chain_LSB import chain_LSB
 from algorithms.n_RMBR import n_RMBR
+from algorithms.BF import BF
 import util
 
 # define object and run it  in the provided sample

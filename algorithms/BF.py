@@ -14,7 +14,7 @@ class BF(steganographyAlgorythm):
         self.is_success = False
         self.error_msg = ""
         self.location_map = []
-        if type != 1 or type != 2:
+        if type != 1 and type != 2:
             self.type = 1
         else:
             self.type = type
@@ -96,29 +96,26 @@ class BF(steganographyAlgorythm):
         if self.color == "":
             color_number = 3
 
-        type_number = 2
+        block_number = 3
         if self.type == 2:
-            type_number = 3
+            block_number = 4
 
-        available_blocks = (total_pixels * color_number) // type_number
-        SOM_bit_len = math.ceil(math.log2(available_blocks))
+        available_bits = (total_pixels * color_number) * 2
+        available_blocks = (total_pixels * color_number) // 2
+        SOM_bit_len = math.ceil(math.log2(available_bits))
         SOM_bit_value = len(b_message)
         SOM = bin(SOM_bit_value)[2:]
         SOM = '0' * (SOM_bit_len - len(SOM)) + SOM
 
         b_message = SOM + b_message
-        req_blocks = len(b_message) // 3
+        req_blocks = len(b_message) // block_number
         if req_blocks > available_blocks:
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return
         
-        if self.type == 1:
-            self.__calculate_location_map_type_1__(total_pixels, array)
-            array = self.__hide_text_type_1__(array, b_message)
-        else:
-            self.__calculate_location_map_type_2__(total_pixels, array)
-            array = self.__hide_text_type_2__(array, b_message)
+        self.__calculate_location_map__(total_pixels, array)
+        array = self.__hide_text__(array, b_message)
 
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
@@ -143,11 +140,7 @@ class BF(steganographyAlgorythm):
             n = 4
         total_pixels = array.size//n
 
-        if self.type == 1:
-            hidden_bits = self.__get_hidded_bits_type_1__(total_pixels, array)
-        else:
-            hidden_bits = self.__get_hidded_bits_type_2__(total_pixels, array)
-
+        hidden_bits = self.__get_hidded_bits__(total_pixels, array)
         hidden_bits = [hidden_bits[i:i+8] for i in range(0, len(hidden_bits), 8)]
         if len(hidden_bits[-1]) != 8:
             hidden_bits = hidden_bits[:-1]
@@ -175,7 +168,7 @@ class BF(steganographyAlgorythm):
             return '1'
         return '0'
 
-    def __calculate_location_map_type_1__(self, total_pixels, array):
+    def __calculate_location_map__(self, total_pixels, array):
         location_map = []
         color_init, color_end = self.__get_color_range__()
         for p in range(total_pixels):
@@ -187,10 +180,28 @@ class BF(steganographyAlgorythm):
         
         self.location_map = location_map
 
-    def __hide_text_type_1__(self, array, b_message):
-        b_message_block = [b_message[i:i+3] for i in range(0, len(b_message), 3)]
-        if len(b_message_block[-1]) != 3:
-            b_message_block[-1] = b_message_block[-1] + '0' * (3 - len(b_message_block[-1]))
+    def __get_value__(self, array, index, color_value):
+        if color_value == 2:
+            value = array[index][color_value]
+            color_value = 0
+            index += 1
+        else:
+            value = array[index][color_value]
+            color_value += 1
+
+        return index, color_value, value
+
+    def __hide_text__(self, array, b_message):
+        if self.type == 1:
+            block_size = 3
+            calculate_hide_text = self.__calculate_hide_text_type_1__
+        else:
+            block_size = 4
+            calculate_hide_text = self.__calculate_hide_text_type_2__
+        
+        b_message_block = [b_message[i:i+block_size] for i in range(0, len(b_message), block_size)]
+        if len(b_message_block[-1]) != block_size:
+            b_message_block[-1] = b_message_block[-1] + '0' * (block_size - len(b_message_block[-1]))
 
         index = 0
         color_init, color_end = self.__get_color_range__()
@@ -209,71 +220,100 @@ class BF(steganographyAlgorythm):
                 value_2 = array[index+1][color_value]
                 index += 2
             else:
-                index, color_value, value_1 = self.__get_value_type_1__(array, index, color_value)
+                index, color_value, value_1 = self.__get_value__(array, index, color_value)
                 value_2_index = index
                 value_2_color = color_value
-                index, color_value, value_2 = self.__get_value_type_1__(array, index, color_value)
+                index, color_value, value_2 = self.__get_value__(array, index, color_value)
 
             value_1_bin = bin(value_1)[2:]
             value_1_bin = '0' * (8 - len(value_1_bin)) + value_1_bin
             value_2_bin = bin(value_2)[2:]
             value_2_bin = '0' * (8 - len(value_2_bin)) + value_2_bin
-
-            if block == '001':
-                value_1_bin = value_1_bin[:7] + self.__reverse_bit__(value_1_bin[-1])
-            elif block == '010':
-                value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + value_1_bin[-1]
-            elif block == '011':
-                value_2_bin = value_2_bin[:7] + self.__reverse_bit__(value_2_bin[-1])
-            elif block == '100':
-                value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + value_2_bin[-1]
-            elif block == '101':
-                value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + self.__reverse_bit__(value_1_bin[-1])
-            elif block == '110':
-                value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + self.__reverse_bit__(value_2_bin[-1])
-            elif block == '111':
-                value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + self.__reverse_bit__(value_1_bin[-1])
-                value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + self.__reverse_bit__(value_2_bin[-1])
-
+            value_1_bin, value_2_bin = calculate_hide_text(block, value_1_bin, value_2_bin)
             array[value_1_index][value_1_color] = int(value_1_bin, 2)
             array[value_2_index][value_2_color] = int(value_2_bin, 2)
         return array
 
-    def __get_value_type_1__(self, array, index, color_value):
-        if color_value == 2:
-            value = array[index][color_value]
-            color_value = 0
-            index += 1
-        else:
-            value = array[index][color_value]
-            color_value += 1
+    def __calculate_hide_text_type_1__(self, block, value_1_bin, value_2_bin):
+        if block == '001':
+            value_1_bin = value_1_bin[:7] + self.__reverse_bit__(value_1_bin[-1])
+        elif block == '010':
+            value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + value_1_bin[-1]
+        elif block == '011':
+            value_2_bin = value_2_bin[:7] + self.__reverse_bit__(value_2_bin[-1])
+        elif block == '100':
+            value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + value_2_bin[-1]
+        elif block == '101':
+            value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + self.__reverse_bit__(value_1_bin[-1])
+        elif block == '110':
+            value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + self.__reverse_bit__(value_2_bin[-1])
+        elif block == '111':
+            value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + self.__reverse_bit__(value_1_bin[-1])
+            value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + self.__reverse_bit__(value_2_bin[-1])
+    
+        return value_1_bin, value_2_bin
 
-        return index, color_value, value
+    def __calculate_hide_text_type_2__(self, block, value_1_bin, value_2_bin):
+        if block == '0001':
+            value_2_bin = value_2_bin[:7] + self.__reverse_bit__(value_2_bin[-1])
+        elif block == '0010':
+            value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + value_2_bin[-1]
+        elif block == '0011':
+            value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + self.__reverse_bit__(value_2_bin[-1])
+        elif block == '0100':
+            value_1_bin = value_1_bin[:7] + self.__reverse_bit__(value_1_bin[-1])
+        elif block == '0101':
+            value_1_bin = value_1_bin[:7] + self.__reverse_bit__(value_1_bin[-1])
+            value_2_bin = value_2_bin[:7] + self.__reverse_bit__(value_2_bin[-1])
+        elif block == '0110':
+            value_1_bin = value_1_bin[:7] + self.__reverse_bit__(value_1_bin[-1])
+            value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + value_2_bin[-1]
+        elif block == '0111':
+            value_1_bin = value_1_bin[:7] + self.__reverse_bit__(value_1_bin[-1])
+            value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + self.__reverse_bit__(value_2_bin[-1])
+        elif block == '1000':
+            value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + value_1_bin[-1]
+        elif block == '1001':
+            value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + value_1_bin[-1]
+            value_2_bin = value_2_bin[:7] + self.__reverse_bit__(value_2_bin[-1])
+        elif block == '1010':
+            value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + value_1_bin[-1]
+            value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + value_2_bin[-1]
+        elif block == '1011':
+            value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + value_1_bin[-1]
+            value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + self.__reverse_bit__(value_2_bin[-1])
+        elif block == '1100':
+            value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + self.__reverse_bit__(value_1_bin[-1])
+        elif block == '1101':
+            value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + self.__reverse_bit__(value_1_bin[-1])
+            value_2_bin = value_2_bin[:7] + self.__reverse_bit__(value_2_bin[-1])
+        elif block == '1110':
+            value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + self.__reverse_bit__(value_1_bin[-1])
+            value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + value_2_bin[-1]
+        elif block == '1111':
+            value_1_bin = value_1_bin[:6] + self.__reverse_bit__(value_1_bin[-2]) + self.__reverse_bit__(value_1_bin[-1])
+            value_2_bin = value_2_bin[:6] + self.__reverse_bit__(value_2_bin[-2]) + self.__reverse_bit__(value_2_bin[-1])
+        
+        return value_1_bin, value_2_bin
 
-    def __calculate_location_map_type_2__(self, total_pixels, array):
-        pass
-
-    def __hide_text_type_2__(self, array, b_message):
-        pass
-
-    def __get_value_type_2__(self, array, index, color_value):
-        pass
-
-    def __get_hidded_bits_type_1__(self, total_pixels, array):
+    def __get_hidded_bits__(self, total_pixels, array):
         count = 0
         hidden_bits = ""
         color_number = 1
         if self.color == "":
             color_number = 3
 
-        type_number = 2
-        if self.type == 2:
-            type_number = 3
+        if self.type == 1:
+            count_inc = 3
+            calculate_hidden_bit = self.__calculate_hidden_bits_type_1__
+        else:
+            count_inc = 4
+            calculate_hidden_bit = self.__calculate_hidden_bits_type_2__
 
         msg_len = 0
         index = 0
         map_index = 0
-        SOM_bit_len = math.ceil(math.log2((total_pixels * color_number) // type_number))
+        SOM_bit_len = math.ceil(math.log2((total_pixels * color_number) * 2))
         color_init, color_end = self.__get_color_range__()
         one_color = False
         color_value = color_init
@@ -286,8 +326,8 @@ class BF(steganographyAlgorythm):
                 value_2 = array[index+1][color_value]
                 index += 2
             else:
-                index, color_value, value_1 = self.__get_value_type_1__(array, index, color_value)
-                index, color_value, value_2 = self.__get_value_type_1__(array, index, color_value)
+                index, color_value, value_1 = self.__get_value__(array, index, color_value)
+                index, color_value, value_2 = self.__get_value__(array, index, color_value)
 
             value_1_bin = bin(value_1)[2:]
             value_1_bin = '0' * (8 - len(value_1_bin)) + value_1_bin
@@ -295,9 +335,9 @@ class BF(steganographyAlgorythm):
             value_2_bin = bin(value_2)[2:]
             value_2_bin = '0' * (8 - len(value_2_bin)) + value_2_bin
             value_2_chunk = value_2_bin[-2:]
-            hidden_bits += self.__calculate_hidden_bits_type_1__(self.location_map[map_index], self.location_map[map_index+1], value_1_chunk, value_2_chunk)
+            hidden_bits += calculate_hidden_bit(self.location_map[map_index], self.location_map[map_index+1], value_1_chunk, value_2_chunk)
             map_index += 2
-            count += 3
+            count += count_inc
             if count < SOM_bit_len:
                 continue
         
@@ -311,8 +351,8 @@ class BF(steganographyAlgorythm):
                 value_2 = array[index+1][color_value]
                 index += 2
             else:
-                index, color_value, value_1 = self.__get_value_type_1__(array, index, color_value)
-                index, color_value, value_2 = self.__get_value_type_1__(array, index, color_value)
+                index, color_value, value_1 = self.__get_value__(array, index, color_value)
+                index, color_value, value_2 = self.__get_value__(array, index, color_value)
 
             value_1_bin = bin(value_1)[2:]
             value_1_bin = '0' * (8 - len(value_1_bin)) + value_1_bin
@@ -320,9 +360,9 @@ class BF(steganographyAlgorythm):
             value_2_bin = bin(value_2)[2:]
             value_2_bin = '0' * (8 - len(value_2_bin)) + value_2_bin
             value_2_chunk = value_2_bin[-2:]
-            hidden_bits += self.__calculate_hidden_bits_type_1__(self.location_map[map_index], self.location_map[map_index+1], value_1_chunk, value_2_chunk)
+            hidden_bits += calculate_hidden_bit(self.location_map[map_index], self.location_map[map_index+1], value_1_chunk, value_2_chunk)
             map_index += 2
-            msg_len -= 3
+            msg_len -= count_inc
         
         return hidden_bits
 
@@ -346,5 +386,38 @@ class BF(steganographyAlgorythm):
         
         return '000'
 
-    def __get_hidded_bits_type_2__(self, total_pixels):
-        pass
+    def __calculate_hidden_bits_type_2__(self, map, map_2, value_1_chunk, value_2_chunk):
+        if map == value_1_chunk and map_2 == value_2_chunk:
+            return '0000'
+        elif map[0] == value_1_chunk[0] and map_2[0] == value_2_chunk[0] and map[1] == value_1_chunk[1] and map_2[1] != value_2_chunk[1]:
+            return '0001'
+        elif map[0] == value_1_chunk[0] and map_2[0] != value_2_chunk[0] and map[1] == value_1_chunk[1] and map_2[1] == value_2_chunk[1]:
+            return '0010'
+        elif map[0] == value_1_chunk[0] and map_2[0] != value_2_chunk[0] and map[1] == value_1_chunk[1] and map_2[1] != value_2_chunk[1]:
+            return '0011'
+        elif map[0] == value_1_chunk[0] and map_2[0] == value_2_chunk[0] and map[1] != value_1_chunk[1] and map_2[1] == value_2_chunk[1]:
+            return '0100'
+        elif map[0] == value_1_chunk[0] and map_2[0] == value_2_chunk[0] and map[1] != value_1_chunk[1] and map_2[1] != value_2_chunk[1]:
+            return '0101'
+        elif map[0] == value_1_chunk[0] and map_2[0] != value_2_chunk[0] and map[1] != value_1_chunk[1] and map_2[1] == value_2_chunk[1]:
+            return '0110'
+        elif map[0] == value_1_chunk[0] and map_2[0] != value_2_chunk[0] and map[1] != value_1_chunk[1] and map_2[1] != value_2_chunk[1]:
+            return '0111'
+        elif map[0] != value_1_chunk[0] and map_2[0] == value_2_chunk[0] and map[1] == value_1_chunk[1] and map_2[1] == value_2_chunk[1]:
+            return '1000'
+        elif map[0] != value_1_chunk[0] and map_2[0] == value_2_chunk[0] and map[1] == value_1_chunk[1] and map_2[1] != value_2_chunk[1]:
+            return '1001'
+        elif map[0] != value_1_chunk[0] and map_2[0] != value_2_chunk[0] and map[1] == value_1_chunk[1] and map_2[1] == value_2_chunk[1]:
+            return '1010'
+        elif map[0] != value_1_chunk[0] and map_2[0] != value_2_chunk[0] and map[1] == value_1_chunk[1] and map_2[1] != value_2_chunk[1]:
+            return '1011'
+        elif map[0] != value_1_chunk[0] and map_2[0] == value_2_chunk[0] and map[1] != value_1_chunk[1] and map_2[1] == value_2_chunk[1]:
+            return '1100'
+        elif map[0] != value_1_chunk[0] and map_2[0] == value_2_chunk[0] and map[1] != value_1_chunk[1] and map_2[1] != value_2_chunk[1]:
+            return '1101'
+        elif map[0] != value_1_chunk[0] and map_2[0] != value_2_chunk[0] and map[1] != value_1_chunk[1] and map_2[1] == value_2_chunk[1]:
+            return '1110'
+        elif map[0] != value_1_chunk[0] and map_2[0] != value_2_chunk[0] and map[1] != value_1_chunk[1] and map_2[1] != value_2_chunk[1]:
+            return '1111'
+        
+        return '0000'

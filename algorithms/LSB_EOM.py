@@ -93,9 +93,8 @@ class LSB_EOM(steganographyAlgorythm):
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return
-        else:
-            array = self.__hide_text__(total_pixels, req_bits, array, b_message)
 
+        array = self.__hide_text__(total_pixels, req_bits, array, b_message)
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
 
@@ -136,7 +135,7 @@ class LSB_EOM(steganographyAlgorythm):
                 block_bits += value_bit[-self.k:]
 
             hidden_bits = [block_bits[i:i+8] for i in range(0, len(block_bits), 8)]
-            if hidden_bits[len(hidden_bits) - 1] != 8:
+            if len(hidden_bits[-1]) != 8:
                 left_bits = hidden_bits[-1]
                 hidden_bits = hidden_bits[:-1]
             else:
@@ -169,11 +168,11 @@ class LSB_EOM(steganographyAlgorythm):
                     return array
 
                 value_old = array[p][color]
-                value_old_int = bin(value_old)[2:]
-                value_old_int = '0' * (8 - len(value_old_int)) + value_old_int
+                value_old_bin = bin(value_old)[2:]
+                value_old_bin = '0' * (8 - len(value_old_bin)) + value_old_bin
                 b_message_bit = b_message[index:index+self.k]
                 b_message_bit = '0' * (self.k - len(b_message_bit)) + b_message_bit
-                value_new_int = value_old_int[:8-self.k] + b_message_bit
+                value_new_int = value_old_bin[:8-self.k] + b_message_bit
                 value_new = int(value_new_int, 2)
                 index += self.k
                 array[p][color] = value_new

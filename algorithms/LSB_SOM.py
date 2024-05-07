@@ -86,22 +86,21 @@ class LSB_SOM(steganographyAlgorythm):
         total_pixels = array.size//n
         b_message = ''.join([format(ord(i), "08b") for i in message])
         
-        SOM_bit_len = math.ceil(math.log2(total_pixels * 3 * self.k))
+        available_bits = total_pixels * 3 * self.k
+        SOM_bit_len = math.ceil(math.log2(available_bits))
         SOM_bit_value = len(b_message)
         SOM = bin(SOM_bit_value)[2:]
-        padding_length = SOM_bit_len - len(SOM)
-        SOM = '0'*padding_length + SOM
+        SOM = '0' * (SOM_bit_len - len(SOM)) + SOM
 
         b_message = SOM + b_message
         req_bits = len(b_message)
 
-        if req_bits > total_pixels * 3 * self.k:
+        if req_bits > available_bits:
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return
-        else:
-            array = self.__hide_text__(total_pixels, req_bits, array, b_message)
 
+        array = self.__hide_text__(total_pixels, req_bits, array, b_message)
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
 
@@ -144,45 +143,51 @@ class LSB_SOM(steganographyAlgorythm):
         self.is_success = True
 
     def __hide_text__(self, total_pixels, req_bits, array, b_message):
-        index=0
+        index = 0
         for p in range(total_pixels):
-            for q in range(0, 3):
-                AND_value = 255
-                BIT_value = 1
-                new_value = 0
-                for bit in range(self.k):
-                    if index < req_bits:
-                        AND_value -= BIT_value
-                        new_value += int(b_message[index]) * BIT_value
-                        BIT_value *= 2
-                        index += 1
-                    else:
-                        array[p][q] = (array[p][q] & AND_value) + new_value
-                        return array
-                    
-                array[p][q] = (array[p][q] & AND_value) + new_value
+            for color in range(0, 3):
+                if index >= req_bits:
+                    return array
+
+                value_old = array[p][color]
+                value_old_bin = bin(value_old)[2:]
+                value_old_bin = '0' * (8 - len(value_old_bin)) + value_old_bin
+                b_message_bit = b_message[index:index+self.k]
+                b_message_bit = '0' * (self.k - len(b_message_bit)) + b_message_bit
+                value_new_int = value_old_bin[:8-self.k] + b_message_bit
+                value_new = int(value_new_int, 2)
+                index += self.k
+                array[p][color] = value_new
+
+        return array
 
     def __calculate_SOM__(self, total_pixels, array):
         SOM_bit_len = math.ceil(math.log2(total_pixels * 3 * self.k))
         loop_counter = SOM_bit_len
         msg_size_b = ""
         for p in range(total_pixels):
-            for q in range(0, 3):
-                for bit in range(self.k):
-                    msg_size_b += str(self.get_bit_value(array[p][q], bit))
-                    loop_counter -= 1
-                    if loop_counter == 0:
-                        return msg_size_b, SOM_bit_len
+            for color in range(0, 3):
+                value_bit = bin(array[p][color])[2:]
+                value_bit = '0' * (8 - len(value_bit)) + value_bit
+                msg_size_b += value_bit[-self.k:]
+                loop_counter -= self.k
+                if loop_counter <= 0:
+                    return msg_size_b[:SOM_bit_len], SOM_bit_len
 
     def __get_hidded_bits__(self, total_pixels, loop_counter, array):
         hidden_bits = ""
         for p in range(total_pixels):
-            for q in range(0, 3):
-                for bit in range(self.k):
-                    hidden_bits += str(self.get_bit_value(array[p][q], bit))
-                    loop_counter -= 1
-                    if loop_counter == 0:
-                        return hidden_bits
+            for color in range(0, 3):
+                value_bit = bin(array[p][color])[2:]
+                value_bit = '0' * (8 - len(value_bit)) + value_bit
+                k = self.k
+                if loop_counter < self.k:
+                    k = loop_counter
+
+                hidden_bits += value_bit[-k:]
+                loop_counter -= k
+                if loop_counter <= 0:
+                    return hidden_bits
 
     def get_bit_value(self, number, n):
         # Create a mask with a 1 at the nth position

@@ -235,10 +235,10 @@ class QVD_8D(steganographyAlgorythm):
     def __calculate_support_block_bits__(self, block_list):
         quotient_block_list = []
         reminder_block_list = []
+        color_init, color_end = self.__get_color_range__()
         for block in block_list:
             block_quotient = block.copy()
             block_reminder = block.copy()
-            color_init, color_end = self.__get_color_range__()
             for color in range(color_init, color_end):
                 for x in range(3):
                     for y in range(3):

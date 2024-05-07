@@ -86,22 +86,21 @@ class LSB_SOM(steganographyAlgorythm):
         total_pixels = array.size//n
         b_message = ''.join([format(ord(i), "08b") for i in message])
         
-        SOM_bit_len = math.ceil(math.log2(total_pixels * 3 * self.k))
+        available_bits = total_pixels * 3 * self.k
+        SOM_bit_len = math.ceil(math.log2(available_bits))
         SOM_bit_value = len(b_message)
         SOM = bin(SOM_bit_value)[2:]
-        padding_length = SOM_bit_len - len(SOM)
-        SOM = '0'*padding_length + SOM
+        SOM = '0' * (SOM_bit_len - len(SOM)) + SOM
 
         b_message = SOM + b_message
         req_bits = len(b_message)
 
-        if req_bits > total_pixels * 3 * self.k:
+        if req_bits > available_bits:
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return
-        else:
-            array = self.__hide_text__(total_pixels, req_bits, array, b_message)
 
+        array = self.__hide_text__(total_pixels, req_bits, array, b_message)
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
 

@@ -9,7 +9,7 @@ import util
 # color parameter allows you to specify which color should be used (default is all)
 # k parameter allows you to specify how many bits should be hidden in one byte when LSB is used
 class QVD_8D(steganographyAlgorythm):
-    def __init__(self, end_msg="$t3g0", color="", type=3, k=4, estimation = True):
+    def __init__(self, end_msg="$t3g0", color="", type=3, k=4, estimation=True):
         self.stego_img_path = ""
         self.destination_path = ""
         self.msg_extension = ".txt"

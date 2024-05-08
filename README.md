@@ -1,8 +1,6 @@
 # Master-thesis-steganography
 
 ## Steganography algorithms:
-- steganographyAlgorythm - Abstract class, all stego algorithms inherit from it.
-- sample - Demo stego algorithm, the simplest LSB implementation.
 - LSB_EOM - Least Significant Bit - End Of Message. A unique message is added at the end of the message to signal the end of the hidden text. A unique message can be defined by the user. You can also specify how many bits should be used in a single pixel, see parameter k.
 - LSB_SOM - Least Significant Bit - Size Of Message. The message size is added at the beginning of the message to know how long the hidden text is. The message size occupies n bits equal to the size of the image represented in the following form: 2^n. You can also specify how many bits should be used in a single pixel, see parameter k.
 - chain_LSB - chain Least Significant Bit. The message is divided into chunks. Each chunk contains a hidden part of the message and a pointer to the next chunk. The chunks are placed randomly.
@@ -12,4 +10,5 @@
 - QVD_8D - Quotient Value Differencing - 8 Directional. The algorithm is an implementation of the article: Swain, G. (2019). Very high capacity image steganography technique using quotient value differencing and LSB substitution. Arabian Journal for Science and Engineering, 44(4), 2995-3004. https://doi.org/10.1007/s13369-018-3372-2
 - n_RMBR - n-Right most Bit Replacement. The algorithm is an implementation of the article: Sahu, A. K., & Swain, G. (2019). A novel n-rightmost bit replacement image steganography technique. 3D Research, 10, 1-18. https://doi.org/10.1007/s13319-018-0211-x
 - BF - Bit flipping. The algorithm is an implementation of the article: Sahu, A. K., Swain, G., & Babu, E. S. (2018). Digital image steganography using bit flipping. Cybernetics and Information Technologies, 18(1), 69-80. https://doi.org/10.2478/cait-2018-0006
+- PVDMF - Pixel Value Differencing and Modulus Function. The algorithm is an implementation of the article: Sahu, A. K., & Swain, G. (2019). An optimal information hiding approach based on pixel value differencing and modulus function. Wireless Personal Communications, 108, 159-174. https://doi.org/10.1007/s11277-019-06393-z
 - BPCS - Bit-Plane Complexity Segmentation steganography. The embedding operation is to replace the "complex areas" on the bit planes of the vessel image with the confidential data.

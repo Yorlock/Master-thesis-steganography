@@ -8,13 +8,14 @@ from algorithms.LSB_SINE import LSB_SINE
 from algorithms.BPCS import BPCS
 from algorithms.chain_LSB import chain_LSB
 from algorithms.n_RMBR import n_RMBR
+from algorithms.PVDMF import PVDMF
 from algorithms.BF import BF
 import util
 
 # define object and run it  in the provided sample
 def example1():
-    lsb = BF(type=2, color="")
-    lsb.encode(util.get_carrier_color(2), util.get_secret_msg(4))
+    lsb = PVDMF(type=1, color="")
+    lsb.encode(util.get_carrier_color(1), util.get_secret_msg(5))
     util.check_error(lsb)
     lsb.decode()
     util.check_error(lsb)

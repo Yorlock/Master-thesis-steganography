@@ -1,20 +1,25 @@
 from PIL import Image
 import numpy as np
 import bpcs
+import json
+from time import time
 
 from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
 class BPCS(steganographyAlgorythm):
-    def __init__(self, alpha=0.45, save_bitplates=False):
-        self.stego_img_path = ""
-        self.destination_path = ""
+    def __init__(self, alpha=0.45, calculate_metrics=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.stego_path_dir = util.get_encode_path_dir(self)
+        self.metrics_path = util.get_metrics_path(self)
         self.alpha = alpha
-        self.save_bitplates = save_bitplates
         self.is_success = False
         self.error_msg = ""
+        self.calculate_metrics = calculate_metrics
+        self.json_content = {}
 
     @property
     def is_success(self):
@@ -64,15 +69,38 @@ class BPCS(steganographyAlgorythm):
     def destination_path(self, value):
         self._destination_path = value
 
+    @property
+    def stego_path_dir(self):
+        return self._stego_path_dir
+    
+    @stego_path_dir.setter
+    def stego_path_dir(self, value):
+        self._stego_path_dir = value
+
+    @property
+    def metrics_path(self):
+        return self._metrics_path
+    
+    @metrics_path.setter
+    def metrics_path(self, value):
+        self._metrics_path = value
+
+    @property
+    def json_content(self):
+        return self._json_content
+    
+    @json_content.setter
+    def json_content(self, value):
+        self._json_content = value
+
     def reset_params(self):
         self.is_success = False
         self.error_msg = ""
 
     def encode(self, img_path, msg_path):
-        self.stego_img_path = util.get_encode_path(self)
         bitplatedir=''
-        if self.save_bitplates:
-            bitplatedir = util.get_encode_path_dir(self)
+        if self.calculate_metrics:
+            bitplatedir = self.stego_path_dir
 
         bpcs.encode(img_path, msg_path, self.stego_img_path, self.alpha, outbitplatedir=bitplatedir)
         self.is_success = True
@@ -83,6 +111,5 @@ class BPCS(steganographyAlgorythm):
             return
         
         self.reset_params()
-        self.destination_path = util.get_decode_path(self)
         bpcs.decode(self.stego_img_path, self.destination_path, self.alpha)
         self.is_success = True

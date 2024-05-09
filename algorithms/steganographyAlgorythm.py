@@ -44,11 +44,35 @@ class steganographyAlgorythm(ABC):
 
     @property
     def destination_path(self):
-        return self._destination_path
+        pass
     
     @destination_path.setter
     def destination_path(self, value):
-        self._destination_path = value
+        pass
+
+    @property
+    def stego_path_dir(self):
+        pass
+    
+    @stego_path_dir.setter
+    def stego_path_dir(self, value):
+        pass
+
+    @property
+    def metrics_path(self):
+        pass
+    
+    @metrics_path.setter
+    def metrics_path(self, value):
+        pass
+
+    @property
+    def json_content(self):
+        pass
+    
+    @json_content.setter
+    def json_content(self, value):
+        pass
 
     @abstractmethod
     def reset_params(self):

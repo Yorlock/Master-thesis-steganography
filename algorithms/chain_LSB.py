@@ -1,19 +1,25 @@
 from PIL import Image
 import numpy as np
+import json
+from time import time
 
 from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
 class chain_LSB(steganographyAlgorythm):
-    def __init__(self, k=0, end_msg="$t3g0"):
-        self.stego_img_path = ""
-        self.destination_path = ""
+    def __init__(self, k=0, end_msg="$t3g0", calculate_metrics=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.stego_path_dir = util.get_encode_path_dir(self)
+        self.metrics_path = util.get_metrics_path(self)
         self.is_success = False
         self.k = k
         self.error_msg = ""
         self.end_msg = end_msg
+        self.calculate_metrics = calculate_metrics
+        self.json_content = {}
 
     @property
     def is_success(self):
@@ -63,6 +69,30 @@ class chain_LSB(steganographyAlgorythm):
     def destination_path(self, value):
         self._destination_path = value
 
+    @property
+    def stego_path_dir(self):
+        return self._stego_path_dir
+    
+    @stego_path_dir.setter
+    def stego_path_dir(self, value):
+        self._stego_path_dir = value
+
+    @property
+    def metrics_path(self):
+        return self._metrics_path
+    
+    @metrics_path.setter
+    def metrics_path(self, value):
+        self._metrics_path = value
+
+    @property
+    def json_content(self):
+        return self._json_content
+    
+    @json_content.setter
+    def json_content(self, value):
+        self._json_content = value
+
     def reset_params(self):
         self.is_success = False
         self.error_msg = ""
@@ -106,10 +136,7 @@ class chain_LSB(steganographyAlgorythm):
 
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
-
-        self.stego_img_path = util.get_encode_path(self)
         enc_img.save(self.stego_img_path)
-
         self.is_success = True
 
     def decode(self):
@@ -169,11 +196,9 @@ class chain_LSB(steganographyAlgorythm):
             self.error_msg = "No Hidden Message Found\n"
             return
 
-        self.destination_path = util.get_decode_path(self)
         destination_file = open(self.destination_path, "w")
         destination_file.write(message[:-len(self.end_msg)])
         destination_file.close()
-
         self.is_success = True
 
     def __hide_text__(self, pointer_length, b_message, req_chunks, possible_chunks, array):

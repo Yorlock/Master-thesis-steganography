@@ -1,16 +1,20 @@
 from PIL import Image
 import numpy as np
 import math
+import json
+from time import time
 
 from algorithms.steganographyAlgorythm import steganographyAlgorythm
 import util
 
 class BF(steganographyAlgorythm):
-    def __init__(self, type=1, color=""):
-        self.stego_img_path = ""
-        self.destination_path = ""
+    def __init__(self, type=1, color="", calculate_metrics=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.stego_path_dir = util.get_encode_path_dir(self)
+        self.metrics_path = util.get_metrics_path(self)
         self.is_success = False
         self.error_msg = ""
         self.location_map = []
@@ -24,6 +28,10 @@ class BF(steganographyAlgorythm):
             self.color = color
         else:
             self.color = ""
+        
+        self.calculate_metrics = calculate_metrics
+        self.json_content = {"algorythm":"BF", "type":self.type, "color":self.color,
+                            "stego_image_path":self.stego_img_path, "destination_path" : self.destination_path, "stego_path_dir": self.stego_path_dir}
 
     @property
     def is_success(self):
@@ -73,6 +81,30 @@ class BF(steganographyAlgorythm):
     def destination_path(self, value):
         self._destination_path = value
 
+    @property
+    def stego_path_dir(self):
+        return self._stego_path_dir
+    
+    @stego_path_dir.setter
+    def stego_path_dir(self, value):
+        self._stego_path_dir = value
+
+    @property
+    def metrics_path(self):
+        return self._metrics_path
+    
+    @metrics_path.setter
+    def metrics_path(self, value):
+        self._metrics_path = value
+
+    @property
+    def json_content(self):
+        return self._json_content
+    
+    @json_content.setter
+    def json_content(self, value):
+        self._json_content = value
+
     def reset_params(self):
         self.is_success = False
         self.error_msg = ""
@@ -114,15 +146,19 @@ class BF(steganographyAlgorythm):
             self.error_msg = "ERROR: Need larger file size."
             return
         
+        if self.calculate_metrics:
+            start_time = time()
+
         self.__calculate_location_map__(total_pixels, array)
         array = self.__hide_text__(array, b_message)
+        if self.calculate_metrics:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
 
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
-
-        self.stego_img_path = util.get_encode_path(self)
         enc_img.save(self.stego_img_path)
-
         self.is_success = True
 
     def decode(self):
@@ -140,6 +176,9 @@ class BF(steganographyAlgorythm):
             n = 4
         total_pixels = array.size//n
 
+        if self.calculate_metrics:
+            start_time = time()
+
         hidden_bits = self.__get_hidded_bits__(total_pixels, array)
         hidden_bits = [hidden_bits[i:i+8] for i in range(0, len(hidden_bits), 8)]
         if len(hidden_bits[-1]) != 8:
@@ -149,11 +188,16 @@ class BF(steganographyAlgorythm):
         for i in range(len(hidden_bits)):
             message += chr(int(hidden_bits[i], 2))
 
-        self.destination_path = util.get_decode_path(self)
+        if self.calculate_metrics:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+            with open(self.metrics_path, "w") as f:
+                json.dump(self.json_content, f)
+
         destination_file = open(self.destination_path, "w")
         destination_file.write(message)
         destination_file.close()
-
         self.is_success = True
 
     def __get_color_range__(self):

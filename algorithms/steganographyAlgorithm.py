@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class steganographyAlgorythm(ABC):
+class steganographyAlgorithm(ABC):
 
     @property
     def is_success(self):
@@ -51,11 +51,11 @@ class steganographyAlgorythm(ABC):
         pass
 
     @property
-    def stego_path_dir(self):
+    def algorithm_path_dir(self):
         pass
     
-    @stego_path_dir.setter
-    def stego_path_dir(self, value):
+    @algorithm_path_dir.setter
+    def algorithm_path_dir(self, value):
         pass
 
     @property

@@ -4,16 +4,16 @@ import math
 import json
 from time import time
 
-from algorithms.steganographyAlgorythm import steganographyAlgorythm
+from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
-class BF(steganographyAlgorythm):
+class BF(steganographyAlgorithm):
     def __init__(self, type=1, color="", calculate_metrics=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
         self.stego_img_path = util.get_encode_path(self)
         self.destination_path = util.get_decode_path(self)
-        self.stego_path_dir = util.get_encode_path_dir(self)
         self.metrics_path = util.get_metrics_path(self)
         self.is_success = False
         self.error_msg = ""
@@ -30,8 +30,7 @@ class BF(steganographyAlgorythm):
             self.color = ""
         
         self.calculate_metrics = calculate_metrics
-        self.json_content = {"algorythm":"BF", "type":self.type, "color":self.color,
-                            "stego_image_path":self.stego_img_path, "destination_path" : self.destination_path, "stego_path_dir": self.stego_path_dir}
+        self.json_content = {"algorythm":"BF", "settings": {"type":self.type, "color":self.color}}
 
     @property
     def is_success(self):
@@ -82,12 +81,12 @@ class BF(steganographyAlgorythm):
         self._destination_path = value
 
     @property
-    def stego_path_dir(self):
-        return self._stego_path_dir
+    def algorithm_path_dir(self):
+        return self._algorithm_path_dir
     
-    @stego_path_dir.setter
-    def stego_path_dir(self, value):
-        self._stego_path_dir = value
+    @algorithm_path_dir.setter
+    def algorithm_path_dir(self, value):
+        self._algorithm_path_dir = value
 
     @property
     def metrics_path(self):

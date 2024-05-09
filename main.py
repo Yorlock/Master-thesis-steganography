@@ -15,7 +15,7 @@ import json
 # define object and run it  in the provided sample
 def example1():
     lsb = BF(type=1, color="", calculate_metrics=True)
-    lsb.encode(util.get_carrier_color(1), util.get_secret_msg(5))
+    lsb.encode(util.get_carrier_color(1), util.get_secret_msg(0))
     util.check_error(lsb)
     lsb.decode()
     util.check_error(lsb)
@@ -23,7 +23,8 @@ def example1():
     f = open(lsb.metrics_path, "r")
     data = json.load(f)
     print(data['milli_sec_elapsed_encode'])
-    print(data['milli_sec_elapsed_decode'])
+    print(data['settings']['type'])
+    print(data['settings'])
 
 # define multiple objects and run them in the provided sample
 def example2():

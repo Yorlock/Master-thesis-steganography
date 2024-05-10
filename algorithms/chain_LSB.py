@@ -19,7 +19,7 @@ class chain_LSB(steganographyAlgorithm):
         self.error_msg = ""
         self.end_msg = end_msg
         self.calculate_metrics = calculate_metrics
-        self.json_content = {}
+        self.json_content = {"algorythm":"chain_LSB", "settings": {"k":self.k, "end_msg":self.end_msg}}
 
     @property
     def is_success(self):
@@ -195,6 +195,9 @@ class chain_LSB(steganographyAlgorithm):
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"
             return
+
+        with open(self.metrics_path, "w") as f:
+            json.dump(self.json_content, f)
 
         destination_file = open(self.destination_path, "w")
         destination_file.write(message[:-len(self.end_msg)])

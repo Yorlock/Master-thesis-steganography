@@ -19,7 +19,7 @@ class BPCS(steganographyAlgorithm):
         self.is_success = False
         self.error_msg = ""
         self.calculate_metrics = calculate_metrics
-        self.json_content = {}
+        self.json_content = {"algorythm":"BPCS", "settings": {"alpha":self.alpha}}
 
     @property
     def is_success(self):
@@ -112,4 +112,7 @@ class BPCS(steganographyAlgorithm):
         
         self.reset_params()
         bpcs.decode(self.stego_img_path, self.destination_path, self.alpha)
+
+        with open(self.metrics_path, "w") as f:
+            json.dump(self.json_content, f)
         self.is_success = True

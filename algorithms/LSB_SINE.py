@@ -29,16 +29,16 @@ class LSB_SINE(steganographyAlgorithm):
             self.round_accuracy = round_accuracy
         
         if not isinstance(sine_phase, float):
-            self.sine_value = 1.0
-            self.error_msg += "Parameter sine_value was set to 1.0."
+            self.sine_phase = 1.0
+            self.error_msg += "Parameter sine_phase was set to 1.0."
         elif sine_phase > 1.0 or sine_phase < -1.0:
-            self.sine_value = 1.0
-            self.error_msg += "Parameter sine_value was set to 1.0."
+            self.sine_phase = 1.0
+            self.error_msg += "Parameter sine_phase was set to 1.0."
         else:
-            self.sine_value = sine_phase
+            self.sine_phase = sine_phase
         
         self.calculate_metrics = calculate_metrics
-        self.json_content = {}
+        self.json_content = {"algorythm":"LSB_SINE", "settings": {"round_accuracy":self.round_accuracy, "sine_phase":self.sine_phase ,"end_msg":self.end_msg}}
 
     @property
     def is_success(self):
@@ -204,7 +204,7 @@ class LSB_SINE(steganographyAlgorithm):
                 break
 
             j = math.sin((pixel_index * 2 * math.pi / w + 1) * (h - 1) / 2)
-            if round(j, self.round_accuracy) != self.sine_value:
+            if round(j, self.round_accuracy) != self.sine_phase:
                 continue
             
             block_bits = left_bits
@@ -234,7 +234,10 @@ class LSB_SINE(steganographyAlgorithm):
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"
             return
-        
+
+        with open(self.metrics_path, "w") as f:
+            json.dump(self.json_content, f)
+
         destination_file = open(self.destination_path, "w")
         destination_file.write(message[:-len(self.end_msg)])
         destination_file.close()
@@ -259,7 +262,7 @@ class LSB_SINE(steganographyAlgorithm):
         available_pixels_list = []
         for pixel_index in range(total_pixels):
             j = math.sin((pixel_index * 2 * math.pi / w + 1) * (h - 1) / 2)
-            if round(j, self.round_accuracy) != self.sine_value:
+            if round(j, self.round_accuracy) != self.sine_phase:
                 pixel_index += 1
                 continue
 

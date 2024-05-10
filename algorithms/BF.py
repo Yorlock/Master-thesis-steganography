@@ -191,8 +191,9 @@ class BF(steganographyAlgorithm):
             end_time = time()
             milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
             self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
-            with open(self.metrics_path, "w") as f:
-                json.dump(self.json_content, f)
+
+        with open(self.metrics_path, "w") as f:
+            json.dump(self.json_content, f)
 
         destination_file = open(self.destination_path, "w")
         destination_file.write(message)

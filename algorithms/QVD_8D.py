@@ -35,16 +35,20 @@ class QVD_8D(steganographyAlgorithm):
         self.estimation = estimation
         self.type_range = np.array([[0,7],[8,15],[16,31],[32,63]])
         if type == 0:
+            self.type = 0
             self.type_capacity = np.array([1, 1, 1, 1])
         elif type == 1:
+            self.type = 1
             self.type_capacity = np.array([2, 2, 3, 4])
         elif type == 2:
+            self.type = 2
             self.type_capacity = np.array([1, 1, 2, 3])
         else:
+            self.type = 3
             self.type_capacity = np.array([3, 3, 4, 5])
         
         self.calculate_metrics = calculate_metrics
-        self.json_content = {}
+        self.json_content = {"algorythm":"QVD_8D", "settings": {"type":self.type ,"end_msg":self.end_msg, "color":self.color, "k":self.k}}
 
     @property
     def is_success(self):
@@ -197,6 +201,9 @@ class QVD_8D(steganographyAlgorithm):
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"
             return
+
+        with open(self.metrics_path, "w") as f:
+            json.dump(self.json_content, f)
 
         destination_file = open(self.destination_path, "w")
         destination_file.write(message[:-len(self.end_msg)])

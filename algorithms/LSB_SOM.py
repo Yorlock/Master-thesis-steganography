@@ -23,7 +23,7 @@ class LSB_SOM(steganographyAlgorithm):
             self.error_msg += "The value of parameter k has been changed to 7."
         
         self.calculate_metrics = calculate_metrics
-        self.json_content = {}
+        self.json_content = {"algorythm":"LSB_SOM", "settings": {"k":self.k}}
 
     @property
     def is_success(self):
@@ -162,6 +162,9 @@ class LSB_SOM(steganographyAlgorithm):
         message = ""
         for i in range(len(hidden_bits)):
             message += chr(int(hidden_bits[i], 2))
+
+        with open(self.metrics_path, "w") as f:
+            json.dump(self.json_content, f)
 
         destination_file = open(self.destination_path, "w")
         destination_file.write(message)

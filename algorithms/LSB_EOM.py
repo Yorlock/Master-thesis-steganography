@@ -7,7 +7,7 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class LSB_EOM(steganographyAlgorithm):
-    def __init__(self, end_msg="$t3g0", k=1, calculate_metrics=False):
+    def __init__(self, k=1, end_msg="$t3g0", calculate_metrics=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.algorithm_path_dir = util.get_algorithm_path_dir(self)
@@ -23,7 +23,7 @@ class LSB_EOM(steganographyAlgorithm):
             self.error_msg += "The value of parameter k has been changed to 7."
         
         self.calculate_metrics = calculate_metrics
-        self.json_content = {}
+        self.json_content = {"algorythm":"LSB_EOM", "settings": {"k":self.k, "end_msg":self.end_msg}}
 
     @property
     def is_success(self):
@@ -180,6 +180,9 @@ class LSB_EOM(steganographyAlgorithm):
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"
             return
+
+        with open(self.metrics_path, "w") as f:
+            json.dump(self.json_content, f)
 
         destination_file = open(self.destination_path, "w")
         destination_file.write(message[:-len(self.end_msg)])

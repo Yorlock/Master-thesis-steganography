@@ -7,18 +7,18 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class chain_LSB(steganographyAlgorithm):
-    def __init__(self, k=0, end_msg="$t3g0", calculate_metrics=False):
+    def __init__(self, k=0, end_msg="$t3g0", save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.algorithm_path_dir = util.get_algorithm_path_dir(self)
         self.stego_img_path = util.get_encode_path(self)
         self.destination_path = util.get_decode_path(self)
-        self.metrics_path = util.get_metrics_path(self)
+        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.k = k
         self.error_msg = ""
         self.end_msg = end_msg
-        self.calculate_metrics = calculate_metrics
+        self.save_metadata = save_metadata
         self.json_content = {"algorythm":"chain_LSB", "settings": {"k":self.k, "end_msg":self.end_msg}}
 
     @property
@@ -78,12 +78,12 @@ class chain_LSB(steganographyAlgorithm):
         self._algorithm_path_dir = value
 
     @property
-    def metrics_path(self):
-        return self._metrics_path
+    def metadata_path(self):
+        return self._metadata_path
     
-    @metrics_path.setter
-    def metrics_path(self, value):
-        self._metrics_path = value
+    @metadata_path.setter
+    def metadata_path(self, value):
+        self._metadata_path = value
 
     @property
     def json_content(self):
@@ -102,6 +102,13 @@ class chain_LSB(steganographyAlgorithm):
         width, height = img.size
         array = np.array(list(img.getdata()))
 
+        msg_file = open(msg_path,'r')
+        message = msg_file.read()
+        msg_file.close()
+
+        if self.save_metadata:
+            start_time = time()
+
         if img.mode == 'RGB':
             n = 3
         elif img.mode == 'RGBA':
@@ -117,10 +124,6 @@ class chain_LSB(steganographyAlgorithm):
             self.k = default_length
             self.error_msg += f"The value of parameter k has been changed to {default_length}."
 
-        msg_file = open(msg_path,'r')
-        message = msg_file.read()
-        msg_file.close()
-        
         message += self.end_msg
         b_message = ''.join([format(ord(i), "08b") for i in message])
         req_bits = len(b_message)
@@ -131,8 +134,13 @@ class chain_LSB(steganographyAlgorithm):
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size or larger k."
             return
-        else:
-            array = self.__hide_text__(pointer_length, b_message, req_chunks, possible_chunks, array)
+
+        array = self.__hide_text__(pointer_length, b_message, req_chunks, possible_chunks, array)
+        
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
 
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
@@ -158,6 +166,9 @@ class chain_LSB(steganographyAlgorithm):
         b_k = ""
         hidden_bits = ""
         counter = 0
+        if self.save_metadata:
+            start_time = time()
+
         for p in range(total_pixels):
             if counter >= pointer_length:
                     break
@@ -191,12 +202,18 @@ class chain_LSB(steganographyAlgorithm):
                 break
             else:
                 message += chr(int(hidden_bits[i], 2))
+
         if self.end_msg not in message:
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"
             return
 
-        with open(self.metrics_path, "w") as f:
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+
+        with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
         destination_file = open(self.destination_path, "w")

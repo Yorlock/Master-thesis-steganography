@@ -59,11 +59,11 @@ class steganographyAlgorithm(ABC):
         pass
 
     @property
-    def metrics_path(self):
+    def metadata_path(self):
         pass
     
-    @metrics_path.setter
-    def metrics_path(self, value):
+    @metadata_path.setter
+    def metadata_path(self, value):
         pass
 
     @property

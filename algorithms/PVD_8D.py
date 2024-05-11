@@ -9,17 +9,23 @@ import util
 
 #Type 1 possesses higher PSNR and type 2 possesses higher hiding capacity
 class PVD_8D(steganographyAlgorithm):
-    def __init__(self, end_msg="$t3g0", type=1, estimation = True, calculate_metrics=False):
+    def __init__(self, end_msg="$t3g0", color="", type=1, estimation = True, save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.algorithm_path_dir = util.get_algorithm_path_dir(self)
         self.stego_img_path = util.get_encode_path(self)
         self.destination_path = util.get_decode_path(self)
-        self.metrics_path = util.get_metrics_path(self)
+        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.end_msg = end_msg
         self.estimation = estimation
+        self.colors = ['R', 'G', 'B']
+        if color in self.colors:
+            self.color = color
+        else:
+            self.color = ""
+
         if not isinstance(type, int):
             self.type = 1
             self.error_msg += "Parameter type was set to 1."
@@ -40,8 +46,8 @@ class PVD_8D(steganographyAlgorithm):
             self.t = 1
             self.type_capacity = np.array([1, 1, 1, 1, 1, 1])
         
-        self.calculate_metrics = calculate_metrics
-        self.json_content = {"algorythm":"PVD_8D", "settings": {"type":self.type ,"end_msg":self.end_msg}}
+        self.save_metadata = save_metadata
+        self.json_content = {"algorythm":"PVD_8D", "settings": {"type":self.type, "color":self.color, "end_msg":self.end_msg}}
 
     @property
     def is_success(self):
@@ -100,12 +106,12 @@ class PVD_8D(steganographyAlgorithm):
         self._algorithm_path_dir = value
 
     @property
-    def metrics_path(self):
-        return self._metrics_path
+    def metadata_path(self):
+        return self._metadata_path
     
-    @metrics_path.setter
-    def metrics_path(self, value):
-        self._metrics_path = value
+    @metadata_path.setter
+    def metadata_path(self, value):
+        self._metadata_path = value
 
     @property
     def json_content(self):
@@ -128,6 +134,9 @@ class PVD_8D(steganographyAlgorithm):
         message = msg_file.read()
         msg_file.close()
 
+        if self.save_metadata:
+            start_time = time()
+
         if img.mode == 'RGB':
             n = 3
         elif img.mode == 'RGBA':
@@ -145,6 +154,12 @@ class PVD_8D(steganographyAlgorithm):
 
         enc_block_list = self.__hide_text__(req_bits, block_list, b_message, n)
         enc_matrix = self.__update_matrix__(matrix, enc_block_list, width, height)
+
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+
         enc_img = Image.fromarray(enc_matrix.astype('uint8'), img.mode)
         enc_img.save(self.stego_img_path)
         self.is_success = True
@@ -163,6 +178,9 @@ class PVD_8D(steganographyAlgorithm):
             n = 3
         elif img.mode == 'RGBA':
             n = 4
+
+        if self.save_metadata:
+            start_time = time()
 
         block_list = self.__get_block_list__(matrix, width, height)
         block_bits = ""
@@ -194,7 +212,12 @@ class PVD_8D(steganographyAlgorithm):
             self.error_msg = "No Hidden Message Found\n"
             return
 
-        with open(self.metrics_path, "w") as f:
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+
+        with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
         destination_file = open(self.destination_path, "w")
@@ -207,13 +230,17 @@ class PVD_8D(steganographyAlgorithm):
         blocks = []
         num_blocks_row = rows // 3
         num_blocks_col = cols // 3
+        color_number = 1
+        if self.color == "":
+            color_number = 3
+
         for i in range(num_blocks_row):
             for j in range(num_blocks_col):
                 start_row = i * 3
                 start_col = j * 3
                 block = matrix[start_row:start_row+3, start_col:start_col+3]
                 block = np.array(block, dtype='int')
-                available_bits += self.t * 3 + self.type_capacity[0] * 8 * 3
+                available_bits += self.t * color_number + self.type_capacity[0] * 8 * color_number
                 blocks.append(block)
                 if self.estimation and req_bits <= available_bits:
                     return available_bits, blocks
@@ -235,6 +262,14 @@ class PVD_8D(steganographyAlgorithm):
         # If the result is non-zero, the bit at position n is 1, otherwise, it's 0
         return (number & mask) >> n
 
+    def __get_color_range__(self):
+        if self.color == "":
+            return 0, 3
+
+        color = self.colors.index(self.color)
+        return color, color + 1
+
+
     def __calculate_capacity__(self, value):
         for index in range(len(self.type_range)):
             if value >= self.type_range[index][0] and value <= self.type_range[index][1]:
@@ -244,10 +279,11 @@ class PVD_8D(steganographyAlgorithm):
     def __hide_text__(self, req_bits, block_list, b_message, n):
         used_bits = 0
         used_block = -1
+        color_init, color_end = self.__get_color_range__()
         while used_bits < req_bits:
             used_block += 1
             current_array = block_list[used_block].flatten()
-            for color in range(3):
+            for color in range(color_init, color_end):
                 if used_bits >= req_bits:
                     return block_list
 
@@ -358,7 +394,8 @@ class PVD_8D(steganographyAlgorithm):
     def __get_hidden_text_from_block__(self, block, n):
         hidden_bits = ""
         array = block.flatten()
-        for color in range(3):
+        color_init, color_end = self.__get_color_range__()
+        for color in range(color_init, color_end):
             P_1 = int(block[1][1][color])
             hidden_bits += self.__get_pixel_value__(P_1, self.t)
             color_array = array[color::n]

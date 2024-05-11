@@ -8,13 +8,13 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class LSB_SOM(steganographyAlgorithm):
-    def __init__(self, k=1, calculate_metrics=False):
+    def __init__(self, k=1, save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.algorithm_path_dir = util.get_algorithm_path_dir(self)
         self.stego_img_path = util.get_encode_path(self)
         self.destination_path = util.get_decode_path(self)
-        self.metrics_path = util.get_metrics_path(self)
+        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.k = k
         self.error_msg = ""
@@ -22,7 +22,7 @@ class LSB_SOM(steganographyAlgorithm):
             self.k = 7
             self.error_msg += "The value of parameter k has been changed to 7."
         
-        self.calculate_metrics = calculate_metrics
+        self.save_metadata = save_metadata
         self.json_content = {"algorythm":"LSB_SOM", "settings": {"k":self.k}}
 
     @property
@@ -82,12 +82,12 @@ class LSB_SOM(steganographyAlgorithm):
         self._algorithm_path_dir = value
 
     @property
-    def metrics_path(self):
-        return self._metrics_path
+    def metadata_path(self):
+        return self._metadata_path
     
-    @metrics_path.setter
-    def metrics_path(self, value):
-        self._metrics_path = value
+    @metadata_path.setter
+    def metadata_path(self, value):
+        self._metadata_path = value
 
     @property
     def json_content(self):
@@ -109,6 +109,9 @@ class LSB_SOM(steganographyAlgorithm):
         msg_file = open(msg_path,'r')
         message = msg_file.read()
         msg_file.close()
+
+        if self.save_metadata:
+            start_time = time()
 
         if img.mode == 'RGB':
             n = 3
@@ -132,6 +135,12 @@ class LSB_SOM(steganographyAlgorithm):
             return
 
         array = self.__hide_text__(total_pixels, req_bits, array, b_message)
+        
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
         enc_img.save(self.stego_img_path)
@@ -150,8 +159,11 @@ class LSB_SOM(steganographyAlgorithm):
             n = 3
         elif img.mode == 'RGBA':
             n = 4
-
         total_pixels = array.size//n
+
+        if self.save_metadata:
+            start_time = time()
+
         msg_size_b, SOM_bit_len = self.__calculate_SOM__(total_pixels, array)
         used_bits = int(msg_size_b, 2)
 
@@ -163,7 +175,12 @@ class LSB_SOM(steganographyAlgorithm):
         for i in range(len(hidden_bits)):
             message += chr(int(hidden_bits[i], 2))
 
-        with open(self.metrics_path, "w") as f:
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+
+        with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
         destination_file = open(self.destination_path, "w")

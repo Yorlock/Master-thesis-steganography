@@ -12,13 +12,13 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class LSB_PF(steganographyAlgorithm):
-    def __init__(self, password='12345', color='B', end_msg="$t3g0", calculate_metrics=False):
+    def __init__(self, password='12345', color='B', end_msg="$t3g0", save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.algorithm_path_dir = util.get_algorithm_path_dir(self)
         self.stego_img_path = util.get_encode_path(self)
         self.destination_path = util.get_decode_path(self)
-        self.metrics_path = util.get_metrics_path(self)
+        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.password = password
@@ -27,7 +27,7 @@ class LSB_PF(steganographyAlgorithm):
         if color in self.colors:
             self.color = color
         
-        self.calculate_metrics = calculate_metrics
+        self.save_metadata = save_metadata
         self.json_content = {"algorythm":"LSB_PF", "settings": {"password":self.password, "color":self.color, "end_msg":self.end_msg}}
 
     @property
@@ -87,12 +87,12 @@ class LSB_PF(steganographyAlgorithm):
         self._algorithm_path_dir = value
 
     @property
-    def metrics_path(self):
-        return self._metrics_path
+    def metadata_path(self):
+        return self._metadata_path
     
-    @metrics_path.setter
-    def metrics_path(self, value):
-        self._metrics_path = value
+    @metadata_path.setter
+    def metadata_path(self, value):
+        self._metadata_path = value
 
     @property
     def json_content(self):
@@ -115,6 +115,9 @@ class LSB_PF(steganographyAlgorithm):
         message = msg_file.read()
         msg_file.close()
 
+        if self.save_metadata:
+            start_time = time()
+
         cipher = AESCipher(self.password)
         message = cipher.encrypt(message)
         message += base64.b64encode(str.encode(self.end_msg))
@@ -132,7 +135,7 @@ class LSB_PF(steganographyAlgorithm):
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return
-        
+
         password_bits = ''.join([format(ord(i), "08b") for i in self.password])
         password_blocks = [int(password_bits[i:i+3], 2) for i in range(0, len(password_bits), 3)]
         blocks_len = len(password_blocks)
@@ -156,6 +159,11 @@ class LSB_PF(steganographyAlgorithm):
                     break
                 index_pixel += 1
 
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
         enc_img.save(self.stego_img_path)
@@ -176,6 +184,10 @@ class LSB_PF(steganographyAlgorithm):
             n = 4
 
         total_pixels = array.size//n
+        
+        if self.save_metadata:
+            start_time = time()
+
         _, pixels_index  = self.__get_MSB_filter__(array, total_pixels)
         password_bits = ''.join([format(ord(i), "08b") for i in self.password])
         password_blocks = [int(password_bits[i:i+3], 2) for i in range(0, len(password_bits), 3)]
@@ -224,7 +236,13 @@ class LSB_PF(steganographyAlgorithm):
 
         cipher = AESCipher(self.password)
         message = cipher.decrypt(enc_message[:-len(end_msg_base64)])
-        with open(self.metrics_path, "w") as f:
+
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+        
+        with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
         destination_file = open(self.destination_path, "w")

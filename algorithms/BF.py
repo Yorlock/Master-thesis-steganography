@@ -8,13 +8,13 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class BF(steganographyAlgorithm):
-    def __init__(self, type=1, color="", calculate_metrics=False):
+    def __init__(self, type=1, color="", save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.algorithm_path_dir = util.get_algorithm_path_dir(self)
         self.stego_img_path = util.get_encode_path(self)
         self.destination_path = util.get_decode_path(self)
-        self.metrics_path = util.get_metrics_path(self)
+        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.location_map = []
@@ -29,7 +29,7 @@ class BF(steganographyAlgorithm):
         else:
             self.color = ""
         
-        self.calculate_metrics = calculate_metrics
+        self.save_metadata = save_metadata
         self.json_content = {"algorythm":"BF", "settings": {"type":self.type, "color":self.color}}
 
     @property
@@ -89,12 +89,12 @@ class BF(steganographyAlgorithm):
         self._algorithm_path_dir = value
 
     @property
-    def metrics_path(self):
-        return self._metrics_path
+    def metadata_path(self):
+        return self._metadata_path
     
-    @metrics_path.setter
-    def metrics_path(self, value):
-        self._metrics_path = value
+    @metadata_path.setter
+    def metadata_path(self, value):
+        self._metadata_path = value
 
     @property
     def json_content(self):
@@ -117,11 +117,15 @@ class BF(steganographyAlgorithm):
         message = msg_file.read()
         msg_file.close()
 
+        if self.save_metadata:
+            start_time = time()
+
         if img.mode == 'RGB':
             n = 3
         elif img.mode == 'RGBA':
             n = 4
         total_pixels = array.size//n
+       
         b_message = ''.join([format(ord(i), "08b") for i in message])
         color_number = 1
         if self.color == "":
@@ -144,13 +148,11 @@ class BF(steganographyAlgorithm):
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return
-        
-        if self.calculate_metrics:
-            start_time = time()
 
         self.__calculate_location_map__(total_pixels, array)
         array = self.__hide_text__(array, b_message)
-        if self.calculate_metrics:
+        
+        if self.save_metadata:
             end_time = time()
             milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
             self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
@@ -175,7 +177,7 @@ class BF(steganographyAlgorithm):
             n = 4
         total_pixels = array.size//n
 
-        if self.calculate_metrics:
+        if self.save_metadata:
             start_time = time()
 
         hidden_bits = self.__get_hidded_bits__(total_pixels, array)
@@ -187,12 +189,12 @@ class BF(steganographyAlgorithm):
         for i in range(len(hidden_bits)):
             message += chr(int(hidden_bits[i], 2))
 
-        if self.calculate_metrics:
+        if self.save_metadata:
             end_time = time()
             milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
             self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
 
-        with open(self.metrics_path, "w") as f:
+        with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
         destination_file = open(self.destination_path, "w")

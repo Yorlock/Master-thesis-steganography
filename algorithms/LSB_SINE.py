@@ -9,13 +9,13 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class LSB_SINE(steganographyAlgorithm):
-    def __init__(self, end_msg="$t3g0", round_accuracy=2, sine_phase=1.0, calculate_metrics=False):
+    def __init__(self, end_msg="$t3g0", round_accuracy=2, sine_phase=1.0, save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.algorithm_path_dir = util.get_algorithm_path_dir(self)
         self.stego_img_path = util.get_encode_path(self)
         self.destination_path = util.get_decode_path(self)
-        self.metrics_path = util.get_metrics_path(self)
+        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.end_msg = end_msg
@@ -37,7 +37,7 @@ class LSB_SINE(steganographyAlgorithm):
         else:
             self.sine_phase = sine_phase
         
-        self.calculate_metrics = calculate_metrics
+        self.save_metadata = save_metadata
         self.json_content = {"algorythm":"LSB_SINE", "settings": {"round_accuracy":self.round_accuracy, "sine_phase":self.sine_phase ,"end_msg":self.end_msg}}
 
     @property
@@ -97,12 +97,12 @@ class LSB_SINE(steganographyAlgorithm):
         self._algorithm_path_dir = value
 
     @property
-    def metrics_path(self):
-        return self._metrics_path
+    def metadata_path(self):
+        return self._metadata_path
     
-    @metrics_path.setter
-    def metrics_path(self, value):
-        self._metrics_path = value
+    @metadata_path.setter
+    def metadata_path(self, value):
+        self._metadata_path = value
 
     @property
     def json_content(self):
@@ -124,6 +124,9 @@ class LSB_SINE(steganographyAlgorithm):
         msg_file = open(msg_path,'r')
         message = msg_file.read()
         msg_file.close()
+
+        if self.save_metadata:
+            start_time = time()
 
         if img.mode == 'RGB':
             n = 3
@@ -160,10 +163,15 @@ class LSB_SINE(steganographyAlgorithm):
                 array[pixel_index][color] = int(bits_array, 2)
                 bit_embedded += 1
 
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+
         array=array.reshape(h, w, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
         enc_img.save(self.stego_img_path)
-        if self.calculate_metrics:
+        if self.save_metadata:
             file_name = "sineimage.png"
             available_pixels_list
             sine_array = np.array(list(img.getdata()))
@@ -191,8 +199,11 @@ class LSB_SINE(steganographyAlgorithm):
             n = 3
         elif img.mode == 'RGBA':
             n = 4
-
         total_pixels = array.size//n
+
+        if self.save_metadata:
+            start_time = time()
+
         hidden_bits = ""
         message = ""
         block_bits = ""
@@ -235,7 +246,12 @@ class LSB_SINE(steganographyAlgorithm):
             self.error_msg = "No Hidden Message Found\n"
             return
 
-        with open(self.metrics_path, "w") as f:
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+
+        with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
         destination_file = open(self.destination_path, "w")

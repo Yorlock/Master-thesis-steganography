@@ -69,11 +69,11 @@ def get_decode_path(self):
     destination_path = os.path.join(self.algorithm_path_dir, rf"message{self.msg_extension}")
     return destination_path
 
-def get_metrics_path(self):
+def get_metadata_path(self):
     if self.algorithm_path_dir == '':
         raise Exception('No stego image path')
     
-    destination_path = os.path.join(self.algorithm_path_dir, rf"metrics.json")
+    destination_path = os.path.join(self.algorithm_path_dir, rf"metadata.json")
     return destination_path
 
 def check_error(self):

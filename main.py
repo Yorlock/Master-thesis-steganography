@@ -14,13 +14,13 @@ import json
 
 # define object and run it  in the provided sample
 def example1():
-    lsb = BF(type=1, color="", calculate_metrics=True)
+    lsb = BF(type=1, color="", save_metadata=True)
     lsb.encode(util.get_carrier_color(1), util.get_secret_msg(0))
     util.check_error(lsb)
     lsb.decode()
     util.check_error(lsb)
 
-    f = open(lsb.metrics_path, "r")
+    f = open(lsb.metadata_path, "r")
     data = json.load(f)
     print(data['milli_sec_elapsed_encode'])
     print(data['settings']['type'])

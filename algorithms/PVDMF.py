@@ -8,13 +8,13 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class PVDMF(steganographyAlgorithm):
-    def __init__(self, end_msg="$t3g0", type=1, color="", estimation=True, calculate_metrics=False):
+    def __init__(self, end_msg="$t3g0", type=1, color="", estimation=True, save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.algorithm_path_dir = util.get_algorithm_path_dir(self)
         self.stego_img_path = util.get_encode_path(self)
         self.destination_path = util.get_decode_path(self)
-        self.metrics_path = util.get_metrics_path(self)
+        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.estimation = estimation
@@ -34,7 +34,7 @@ class PVDMF(steganographyAlgorithm):
         else:
             self.color = ""
         
-        self.calculate_metrics = calculate_metrics
+        self.save_metadata = save_metadata
         self.json_content = {"algorythm":"PVDMF", "settings": {"type":self.type ,"end_msg":self.end_msg, "color":self.color}}
 
     @property
@@ -94,12 +94,12 @@ class PVDMF(steganographyAlgorithm):
         self._algorithm_path_dir = value
 
     @property
-    def metrics_path(self):
-        return self._metrics_path
+    def metadata_path(self):
+        return self._metadata_path
     
-    @metrics_path.setter
-    def metrics_path(self, value):
-        self._metrics_path = value
+    @metadata_path.setter
+    def metadata_path(self, value):
+        self._metadata_path = value
 
     @property
     def json_content(self):
@@ -122,6 +122,9 @@ class PVDMF(steganographyAlgorithm):
         message = msg_file.read()
         msg_file.close()
 
+        if self.save_metadata:
+            start_time = time()
+
         if img.mode == 'RGB':
             n = 3
         elif img.mode == 'RGBA':
@@ -141,8 +144,14 @@ class PVDMF(steganographyAlgorithm):
             self.is_success = False
             self.error_msg = "ERROR: An estimate of the available bits shows that a larger file size is needed. Turn off estimation, but this may cause an application error."
             return
-        
+
         array = self.__hide_text__(array, b_message)
+
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
         enc_img.save(self.stego_img_path)
@@ -161,6 +170,9 @@ class PVDMF(steganographyAlgorithm):
             n = 3
         elif img.mode == 'RGBA':
             n = 4
+
+        if self.save_metadata:
+            start_time = time()
 
         color_number = 1
         if self.color == "":
@@ -216,7 +228,12 @@ class PVDMF(steganographyAlgorithm):
             self.error_msg = "No Hidden Message Found\n"
             return
 
-        with open(self.metrics_path, "w") as f:
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+
+        with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
         destination_file = open(self.destination_path, "w")

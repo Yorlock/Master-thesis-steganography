@@ -1,4 +1,3 @@
-from algorithms.sample import sample
 from algorithms.LSB_EOM import LSB_EOM
 from algorithms.LSB_SOM import LSB_SOM
 from algorithms.LSB_PF import LSB_PF
@@ -11,14 +10,21 @@ from algorithms.n_RMBR import n_RMBR
 from algorithms.PVDMF import PVDMF
 from algorithms.BF import BF
 import util
+import json
 
 # define object and run it  in the provided sample
 def example1():
-    lsb = PVDMF(type=1, color="")
-    lsb.encode(util.get_carrier_color(1), util.get_secret_msg(5))
+    lsb = BF(type=1, color="", save_metadata=True)
+    lsb.encode(util.get_carrier_color(1), util.get_secret_msg(0))
     util.check_error(lsb)
     lsb.decode()
     util.check_error(lsb)
+
+    f = open(lsb.metadata_path, "r")
+    data = json.load(f)
+    print(data['milli_sec_elapsed_encode'])
+    print(data['settings']['type'])
+    print(data['settings'])
 
 # define multiple objects and run them in the provided sample
 def example2():

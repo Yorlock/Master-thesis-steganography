@@ -1,15 +1,19 @@
 from PIL import Image
 import numpy as np
+import json
+from time import time
 
-from algorithms.steganographyAlgorythm import steganographyAlgorythm
+from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
-class LSB_EOM(steganographyAlgorythm):
-    def __init__(self, end_msg="$t3g0", k=1):
-        self.stego_img_path = ""
-        self.destination_path = ""
+class LSB_EOM(steganographyAlgorithm):
+    def __init__(self, k=1, end_msg="$t3g0", save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.k = k
@@ -17,6 +21,9 @@ class LSB_EOM(steganographyAlgorythm):
         if k > 8:
             self.k = 7
             self.error_msg += "The value of parameter k has been changed to 7."
+        
+        self.save_metadata = save_metadata
+        self.json_content = {"algorythm":"LSB_EOM", "settings": {"k":self.k, "end_msg":self.end_msg}}
 
     @property
     def is_success(self):
@@ -66,6 +73,30 @@ class LSB_EOM(steganographyAlgorythm):
     def destination_path(self, value):
         self._destination_path = value
 
+    @property
+    def algorithm_path_dir(self):
+        return self._algorithm_path_dir
+    
+    @algorithm_path_dir.setter
+    def algorithm_path_dir(self, value):
+        self._algorithm_path_dir = value
+
+    @property
+    def metadata_path(self):
+        return self._metadata_path
+    
+    @metadata_path.setter
+    def metadata_path(self, value):
+        self._metadata_path = value
+
+    @property
+    def json_content(self):
+        return self._json_content
+    
+    @json_content.setter
+    def json_content(self, value):
+        self._json_content = value
+
     def reset_params(self):
         self.is_success = False
         self.error_msg = ""
@@ -78,6 +109,9 @@ class LSB_EOM(steganographyAlgorythm):
         msg_file = open(msg_path,'r')
         message = msg_file.read()
         msg_file.close()
+
+        if self.save_metadata:
+            start_time = time()
 
         if img.mode == 'RGB':
             n = 3
@@ -95,12 +129,14 @@ class LSB_EOM(steganographyAlgorythm):
             return
 
         array = self.__hide_text__(total_pixels, req_bits, array, b_message)
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
-
-        self.stego_img_path = util.get_encode_path(self)
         enc_img.save(self.stego_img_path)
-
         self.is_success = True
 
     def decode(self):
@@ -124,6 +160,10 @@ class LSB_EOM(steganographyAlgorythm):
         
         is_end = False
         left_bits = ''
+        
+        if self.save_metadata:
+            start_time = time()
+
         for p in range(total_pixels):
             if is_end:
                 break
@@ -153,11 +193,17 @@ class LSB_EOM(steganographyAlgorythm):
             self.error_msg = "No Hidden Message Found\n"
             return
 
-        self.destination_path = util.get_decode_path(self)
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+
+        with open(self.metadata_path, "w") as f:
+            json.dump(self.json_content, f)
+
         destination_file = open(self.destination_path, "w")
         destination_file.write(message[:-len(self.end_msg)])
         destination_file.close()
-
         self.is_success = True
 
     def __hide_text__(self, total_pixels, req_bits, array, b_message):

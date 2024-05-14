@@ -2,20 +2,23 @@ from PIL import Image
 import numpy as np
 import math
 import os
+import json
+from time import time
 
-from algorithms.steganographyAlgorythm import steganographyAlgorythm
+from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
-class LSB_SINE(steganographyAlgorythm):
-    def __init__(self, end_msg="$t3g0", round_accuracy=2, sine_phase=1.0, save_sineimage=False):
-        self.stego_img_path = ""
-        self.destination_path = ""
+class LSB_SINE(steganographyAlgorithm):
+    def __init__(self, end_msg="$t3g0", round_accuracy=2, sine_phase=1.0, save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.end_msg = end_msg
-        self.save_sineimage = save_sineimage
         if not isinstance(round_accuracy, int):
             self.round_accuracy = 2
             self.error_msg += "Parameter round_accuracy was set to 2."
@@ -26,13 +29,16 @@ class LSB_SINE(steganographyAlgorythm):
             self.round_accuracy = round_accuracy
         
         if not isinstance(sine_phase, float):
-            self.sine_value = 1.0
-            self.error_msg += "Parameter sine_value was set to 1.0."
+            self.sine_phase = 1.0
+            self.error_msg += "Parameter sine_phase was set to 1.0."
         elif sine_phase > 1.0 or sine_phase < -1.0:
-            self.sine_value = 1.0
-            self.error_msg += "Parameter sine_value was set to 1.0."
+            self.sine_phase = 1.0
+            self.error_msg += "Parameter sine_phase was set to 1.0."
         else:
-            self.sine_value = sine_phase
+            self.sine_phase = sine_phase
+        
+        self.save_metadata = save_metadata
+        self.json_content = {"algorythm":"LSB_SINE", "settings": {"round_accuracy":self.round_accuracy, "sine_phase":self.sine_phase ,"end_msg":self.end_msg}}
 
     @property
     def is_success(self):
@@ -82,6 +88,30 @@ class LSB_SINE(steganographyAlgorythm):
     def destination_path(self, value):
         self._destination_path = value
 
+    @property
+    def algorithm_path_dir(self):
+        return self._algorithm_path_dir
+    
+    @algorithm_path_dir.setter
+    def algorithm_path_dir(self, value):
+        self._algorithm_path_dir = value
+
+    @property
+    def metadata_path(self):
+        return self._metadata_path
+    
+    @metadata_path.setter
+    def metadata_path(self, value):
+        self._metadata_path = value
+
+    @property
+    def json_content(self):
+        return self._json_content
+    
+    @json_content.setter
+    def json_content(self, value):
+        self._json_content = value
+
     def reset_params(self):
         self.is_success = False
         self.error_msg = ""
@@ -94,6 +124,9 @@ class LSB_SINE(steganographyAlgorythm):
         msg_file = open(msg_path,'r')
         message = msg_file.read()
         msg_file.close()
+
+        if self.save_metadata:
+            start_time = time()
 
         if img.mode == 'RGB':
             n = 3
@@ -130,14 +163,16 @@ class LSB_SINE(steganographyAlgorythm):
                 array[pixel_index][color] = int(bits_array, 2)
                 bit_embedded += 1
 
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+
         array=array.reshape(h, w, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
-        self.stego_img_path = util.get_encode_path(self)
         enc_img.save(self.stego_img_path)
-
-        if self.save_sineimage:
+        if self.save_metadata:
             file_name = "sineimage.png"
-            save_sineimagedir = util.get_encode_path_dir(self)
             available_pixels_list
             sine_array = np.array(list(img.getdata()))
             sine_array[:, 0:3] = 0
@@ -146,7 +181,7 @@ class LSB_SINE(steganographyAlgorythm):
 
             sine_array=sine_array.reshape(h, w, n)
             sine_image = Image.fromarray(sine_array.astype('uint8'), img.mode)
-            sine_image.save(os.path.join(save_sineimagedir, file_name))
+            sine_image.save(os.path.join(self.algorithm_path_dir, file_name))
 
         self.is_success = True
 
@@ -164,8 +199,11 @@ class LSB_SINE(steganographyAlgorythm):
             n = 3
         elif img.mode == 'RGBA':
             n = 4
-
         total_pixels = array.size//n
+
+        if self.save_metadata:
+            start_time = time()
+
         hidden_bits = ""
         message = ""
         block_bits = ""
@@ -177,7 +215,7 @@ class LSB_SINE(steganographyAlgorythm):
                 break
 
             j = math.sin((pixel_index * 2 * math.pi / w + 1) * (h - 1) / 2)
-            if round(j, self.round_accuracy) != self.sine_value:
+            if round(j, self.round_accuracy) != self.sine_phase:
                 continue
             
             block_bits = left_bits
@@ -207,12 +245,18 @@ class LSB_SINE(steganographyAlgorythm):
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"
             return
-        
-        self.destination_path = util.get_decode_path(self)
+
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+
+        with open(self.metadata_path, "w") as f:
+            json.dump(self.json_content, f)
+
         destination_file = open(self.destination_path, "w")
         destination_file.write(message[:-len(self.end_msg)])
         destination_file.close()
-
         self.is_success = True
     
     def __get_MSB_3__(self, number):
@@ -234,7 +278,7 @@ class LSB_SINE(steganographyAlgorythm):
         available_pixels_list = []
         for pixel_index in range(total_pixels):
             j = math.sin((pixel_index * 2 * math.pi / w + 1) * (h - 1) / 2)
-            if round(j, self.round_accuracy) != self.sine_value:
+            if round(j, self.round_accuracy) != self.sine_phase:
                 pixel_index += 1
                 continue
 

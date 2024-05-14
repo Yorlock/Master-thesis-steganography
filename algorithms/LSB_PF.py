@@ -5,16 +5,20 @@ import base64
 import hashlib
 from Crypto import Random
 from Crypto.Cipher import AES
+import json
+from time import time
 
-from algorithms.steganographyAlgorythm import steganographyAlgorythm
+from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
-class LSB_PF(steganographyAlgorythm):
-    def __init__(self, password='12345', color='B', end_msg="$t3g0"):
-        self.stego_img_path = ""
-        self.destination_path = ""
+class LSB_PF(steganographyAlgorithm):
+    def __init__(self, password='12345', color='B', end_msg="$t3g0", save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.password = password
@@ -22,6 +26,9 @@ class LSB_PF(steganographyAlgorythm):
         self.end_msg = end_msg
         if color in self.colors:
             self.color = color
+        
+        self.save_metadata = save_metadata
+        self.json_content = {"algorythm":"LSB_PF", "settings": {"password":self.password, "color":self.color, "end_msg":self.end_msg}}
 
     @property
     def is_success(self):
@@ -71,6 +78,30 @@ class LSB_PF(steganographyAlgorythm):
     def destination_path(self, value):
         self._destination_path = value
 
+    @property
+    def algorithm_path_dir(self):
+        return self._algorithm_path_dir
+    
+    @algorithm_path_dir.setter
+    def algorithm_path_dir(self, value):
+        self._algorithm_path_dir = value
+
+    @property
+    def metadata_path(self):
+        return self._metadata_path
+    
+    @metadata_path.setter
+    def metadata_path(self, value):
+        self._metadata_path = value
+
+    @property
+    def json_content(self):
+        return self._json_content
+    
+    @json_content.setter
+    def json_content(self, value):
+        self._json_content = value
+
     def reset_params(self):
         self.is_success = False
         self.error_msg = ""
@@ -83,6 +114,9 @@ class LSB_PF(steganographyAlgorythm):
         msg_file = open(msg_path,'r')
         message = msg_file.read()
         msg_file.close()
+
+        if self.save_metadata:
+            start_time = time()
 
         cipher = AESCipher(self.password)
         message = cipher.encrypt(message)
@@ -101,7 +135,7 @@ class LSB_PF(steganographyAlgorythm):
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return
-        
+
         password_bits = ''.join([format(ord(i), "08b") for i in self.password])
         password_blocks = [int(password_bits[i:i+3], 2) for i in range(0, len(password_bits), 3)]
         blocks_len = len(password_blocks)
@@ -125,11 +159,14 @@ class LSB_PF(steganographyAlgorythm):
                     break
                 index_pixel += 1
 
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
-        self.stego_img_path = util.get_encode_path(self)
         enc_img.save(self.stego_img_path)
-
         self.is_success = True
 
     def decode(self):
@@ -147,6 +184,10 @@ class LSB_PF(steganographyAlgorythm):
             n = 4
 
         total_pixels = array.size//n
+        
+        if self.save_metadata:
+            start_time = time()
+
         _, pixels_index  = self.__get_MSB_filter__(array, total_pixels)
         password_bits = ''.join([format(ord(i), "08b") for i in self.password])
         password_blocks = [int(password_bits[i:i+3], 2) for i in range(0, len(password_bits), 3)]
@@ -192,11 +233,18 @@ class LSB_PF(steganographyAlgorythm):
             self.is_success = False
             self.error_msg = "No Hidden Message Found\n"
             return
-        
+
         cipher = AESCipher(self.password)
         message = cipher.decrypt(enc_message[:-len(end_msg_base64)])
 
-        self.destination_path = util.get_decode_path(self)
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+        
+        with open(self.metadata_path, "w") as f:
+            json.dump(self.json_content, f)
+
         destination_file = open(self.destination_path, "w")
         destination_file.write(message)
         destination_file.close()

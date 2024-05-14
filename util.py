@@ -6,12 +6,9 @@ def init_instance():
     global result_dir_path
     result_dir_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "results")
     Path(result_dir_path).mkdir(parents=True, exist_ok=True)
-
     sample_dir_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "samples")
-
     global carrier_color_dir_path
     carrier_color_dir_path = os.path.join(sample_dir_path, "carrier")
-
     global secret_msg_dir_path
     secret_msg_dir_path = os.path.join(sample_dir_path, "secret")
 
@@ -48,43 +45,41 @@ def get_carrier_color(sample_number):
 def get_secret_msg(sample_number):
     return os.path.join(secret_msg_dir_path, rf"sample{str(sample_number)}.txt")
 
-def get_encode_path(self):
+def get_algorithm_path_dir(self):
     class_name = type(self).__name__
-    
     destination_path = os.path.join(result_dir_path, rf"{class_name}")
     Path(destination_path).mkdir(parents=True, exist_ok=True)
-
-    number_files = len(glob.glob(destination_path + '\stego*')) + 1
-    destination_path = os.path.join(destination_path, rf"stego{number_files}{self.stego_extension}")
-
-    return destination_path
-
-def get_encode_path_dir(self):
-    if self.stego_img_path == '':
-        raise Exception('No stego image path')
-
-    class_name = type(self).__name__
-    dirname = os.path.splitext(self.stego_img_path)[0]
-    destination_path = os.path.join(result_dir_path, rf"{class_name}")
-    Path(destination_path).mkdir(parents=True, exist_ok=True)
-
+    number_files = len(glob.glob(destination_path + rf'\algorithm*')) + 1
+    dirname = rf'algorithm{number_files}'
     destination_path = os.path.join(destination_path, dirname)
     Path(destination_path).mkdir(parents=True, exist_ok=True)
+    return destination_path
 
+def get_encode_path(self):
+    if self.algorithm_path_dir == '':
+        raise Exception('No stego image path')
+
+    destination_path = os.path.join(self.algorithm_path_dir, rf"stego{self.stego_extension}")
     return destination_path
 
 def get_decode_path(self):
-    class_name = type(self).__name__
+    if self.algorithm_path_dir == '':
+        raise Exception('No stego image path')
 
-    destination_path = os.path.join(result_dir_path, rf"{class_name}")
-    Path(destination_path).mkdir(parents=True, exist_ok=True)
+    destination_path = os.path.join(self.algorithm_path_dir, rf"message{self.msg_extension}")
+    return destination_path
+
+def get_metadata_path(self):
+    if self.algorithm_path_dir == '':
+        raise Exception('No stego image path')
     
-    number_files = len(glob.glob(destination_path + '\message*')) + 1
-    destination_path = os.path.join(destination_path, rf"message{number_files}{self.msg_extension}")
-
+    destination_path = os.path.join(self.algorithm_path_dir, rf"metadata.json")
     return destination_path
 
 def check_error(self):
+    if self.algorithm_path_dir == '':
+        raise Exception('No stego image path')
+    
     class_name = type(self).__name__
     print(rf"{class_name}: {self.is_success}")
     if self.error_msg != "":

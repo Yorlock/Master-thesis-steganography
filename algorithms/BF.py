@@ -1,16 +1,20 @@
 from PIL import Image
 import numpy as np
 import math
+import json
+from time import time
 
-from algorithms.steganographyAlgorythm import steganographyAlgorythm
+from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
-class BF(steganographyAlgorythm):
-    def __init__(self, type=1, color=""):
-        self.stego_img_path = ""
-        self.destination_path = ""
+class BF(steganographyAlgorithm):
+    def __init__(self, type=1, color="", save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.location_map = []
@@ -24,6 +28,9 @@ class BF(steganographyAlgorythm):
             self.color = color
         else:
             self.color = ""
+        
+        self.save_metadata = save_metadata
+        self.json_content = {"algorythm":"BF", "settings": {"type":self.type, "color":self.color}}
 
     @property
     def is_success(self):
@@ -73,6 +80,30 @@ class BF(steganographyAlgorythm):
     def destination_path(self, value):
         self._destination_path = value
 
+    @property
+    def algorithm_path_dir(self):
+        return self._algorithm_path_dir
+    
+    @algorithm_path_dir.setter
+    def algorithm_path_dir(self, value):
+        self._algorithm_path_dir = value
+
+    @property
+    def metadata_path(self):
+        return self._metadata_path
+    
+    @metadata_path.setter
+    def metadata_path(self, value):
+        self._metadata_path = value
+
+    @property
+    def json_content(self):
+        return self._json_content
+    
+    @json_content.setter
+    def json_content(self, value):
+        self._json_content = value
+
     def reset_params(self):
         self.is_success = False
         self.error_msg = ""
@@ -86,11 +117,15 @@ class BF(steganographyAlgorythm):
         message = msg_file.read()
         msg_file.close()
 
+        if self.save_metadata:
+            start_time = time()
+
         if img.mode == 'RGB':
             n = 3
         elif img.mode == 'RGBA':
             n = 4
         total_pixels = array.size//n
+       
         b_message = ''.join([format(ord(i), "08b") for i in message])
         color_number = 1
         if self.color == "":
@@ -113,16 +148,18 @@ class BF(steganographyAlgorythm):
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return
-        
+
         self.__calculate_location_map__(total_pixels, array)
         array = self.__hide_text__(array, b_message)
+        
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
 
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
-
-        self.stego_img_path = util.get_encode_path(self)
         enc_img.save(self.stego_img_path)
-
         self.is_success = True
 
     def decode(self):
@@ -140,6 +177,9 @@ class BF(steganographyAlgorythm):
             n = 4
         total_pixels = array.size//n
 
+        if self.save_metadata:
+            start_time = time()
+
         hidden_bits = self.__get_hidded_bits__(total_pixels, array)
         hidden_bits = [hidden_bits[i:i+8] for i in range(0, len(hidden_bits), 8)]
         if len(hidden_bits[-1]) != 8:
@@ -149,11 +189,17 @@ class BF(steganographyAlgorythm):
         for i in range(len(hidden_bits)):
             message += chr(int(hidden_bits[i], 2))
 
-        self.destination_path = util.get_decode_path(self)
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+
+        with open(self.metadata_path, "w") as f:
+            json.dump(self.json_content, f)
+
         destination_file = open(self.destination_path, "w")
         destination_file.write(message)
         destination_file.close()
-
         self.is_success = True
 
     def __get_color_range__(self):

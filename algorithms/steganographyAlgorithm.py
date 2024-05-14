@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class steganographyAlgorythm(ABC):
+class steganographyAlgorithm(ABC):
 
     @property
     def is_success(self):
@@ -44,11 +44,35 @@ class steganographyAlgorythm(ABC):
 
     @property
     def destination_path(self):
-        return self._destination_path
+        pass
     
     @destination_path.setter
     def destination_path(self, value):
-        self._destination_path = value
+        pass
+
+    @property
+    def algorithm_path_dir(self):
+        pass
+    
+    @algorithm_path_dir.setter
+    def algorithm_path_dir(self, value):
+        pass
+
+    @property
+    def metadata_path(self):
+        pass
+    
+    @metadata_path.setter
+    def metadata_path(self, value):
+        pass
+
+    @property
+    def json_content(self):
+        pass
+    
+    @json_content.setter
+    def json_content(self, value):
+        pass
 
     @abstractmethod
     def reset_params(self):

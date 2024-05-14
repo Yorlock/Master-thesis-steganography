@@ -1,19 +1,23 @@
 from PIL import Image
 import numpy as np
 import math
+import json
+from time import time
 
-from algorithms.steganographyAlgorythm import steganographyAlgorythm
+from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 # the type parameter allows you to change the capacity of the hidden bits when QVD is used
 # color parameter allows you to specify which color should be used (default is all)
 # k parameter allows you to specify how many bits should be hidden in one byte when LSB is used
-class n_RMBR(steganographyAlgorythm):
-    def __init__(self, end_msg="$t3g0", color="", n=4):
-        self.stego_img_path = ""
-        self.destination_path = ""
+class n_RMBR(steganographyAlgorithm):
+    def __init__(self, end_msg="$t3g0", color="", n=4, save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.end_msg = end_msg
@@ -27,6 +31,9 @@ class n_RMBR(steganographyAlgorythm):
             self.n = 4
         else:
             self.n = n
+        
+        self.save_metadata = save_metadata
+        self.json_content = {"algorythm":"n_RMBR", "settings": {"n":self.n, "color":self.color ,"end_msg":self.end_msg}}
 
     @property
     def is_success(self):
@@ -76,6 +83,30 @@ class n_RMBR(steganographyAlgorythm):
     def destination_path(self, value):
         self._destination_path = value
 
+    @property
+    def algorithm_path_dir(self):
+        return self._algorithm_path_dir
+    
+    @algorithm_path_dir.setter
+    def algorithm_path_dir(self, value):
+        self._algorithm_path_dir = value
+
+    @property
+    def metadata_path(self):
+        return self._metadata_path
+    
+    @metadata_path.setter
+    def metadata_path(self, value):
+        self._metadata_path = value
+
+    @property
+    def json_content(self):
+        return self._json_content
+    
+    @json_content.setter
+    def json_content(self, value):
+        self._json_content = value
+
     def reset_params(self):
         self.is_success = False
         self.error_msg = ""
@@ -95,6 +126,9 @@ class n_RMBR(steganographyAlgorythm):
             n = 4
         total_pixels = array.size//n
 
+        if self.save_metadata:
+            start_time = time()
+
         message += self.end_msg
         b_message = ''.join([format(ord(i), "08b") for i in message])
         req_bits = len(b_message)
@@ -109,12 +143,15 @@ class n_RMBR(steganographyAlgorythm):
             return
 
         array = self.__hide_text__(total_pixels, req_bits, array, b_message)
+        
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+        
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
-
-        self.stego_img_path = util.get_encode_path(self)
         enc_img.save(self.stego_img_path)
-
         self.is_success = True
 
     def decode(self):
@@ -130,8 +167,11 @@ class n_RMBR(steganographyAlgorythm):
             n = 3
         elif img.mode == 'RGBA':
             n = 4
-
         total_pixels = array.size//n
+
+        if self.save_metadata:
+            start_time = time()
+
         hidden_bits = ""
         block_bits = ""
         message = ""
@@ -167,11 +207,17 @@ class n_RMBR(steganographyAlgorythm):
             self.error_msg = "No Hidden Message Found\n"
             return
 
-        self.destination_path = util.get_decode_path(self)
+        if self.save_metadata:
+            end_time = time()
+            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+
+        with open(self.metadata_path, "w") as f:
+            json.dump(self.json_content, f)
+
         destination_file = open(self.destination_path, "w")
         destination_file.write(message[:-len(self.end_msg)])
         destination_file.close()
-
         self.is_success = True
 
     def __get_color_range__(self):

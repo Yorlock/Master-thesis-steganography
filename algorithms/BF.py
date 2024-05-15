@@ -29,7 +29,7 @@ class BF(steganographyAlgorithm):
         else:
             self.color = ""
         
-        self.json_content = {"algorythm":"BF", "settings": {"type":self.type, "color":self.color}}
+        self.json_content = {"algorithm":"BF", "settings": {"type":self.type, "color":self.color}}
 
     @property
     def is_success(self):

@@ -18,7 +18,7 @@ class chain_LSB(steganographyAlgorithm):
         self.k = k
         self.error_msg = ""
         self.end_msg = end_msg
-        self.json_content = {"algorythm":"chain_LSB", "settings": {"k":self.k, "end_msg":self.end_msg}}
+        self.json_content = {"algorithm":"chain_LSB", "settings": {"k":self.k, "end_msg":self.end_msg}}
 
     @property
     def is_success(self):

@@ -22,7 +22,7 @@ class LSB_EOM(steganographyAlgorithm):
             self.k = 7
             self.error_msg += "The value of parameter k has been changed to 7."
         
-        self.json_content = {"algorythm":"LSB_EOM", "settings": {"k":self.k, "end_msg":self.end_msg}}
+        self.json_content = {"algorithm":"LSB_EOM", "settings": {"k":self.k, "end_msg":self.end_msg}}
 
     @property
     def is_success(self):

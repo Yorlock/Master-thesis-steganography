@@ -10,6 +10,7 @@ from algorithms.n_RMBR import n_RMBR
 from algorithms.PVDMF import PVDMF
 from algorithms.BF import BF
 import util
+import metrics
 import json
 
 # define object and run it  in the provided sample
@@ -28,12 +29,15 @@ def example1():
 
 # define multiple objects and run them in the provided sample
 def example2():
-    algorithms = [BPCS(alpha=0.45), LSB_EOM(end_msg="G$:+.3", k=1), LSB_SOM(k=1)]
+    algorithms = [LSB_EOM(end_msg="G$:+.3", k=1), LSB_SOM(k=1), chain_LSB()]
+
+    metrics_calculator = metrics.metrics_calculator()
     for algorithm in algorithms:
         algorithm.encode(util.get_carrier_color(2), util.get_secret_msg(1))
         util.check_error(algorithm)
         algorithm.decode()
         util.check_error(algorithm)
+        metrics_calculator.setup(algorithm.algorithm_path_dir, util.get_carrier_color(2))
 
 # define multiple objects and run them in the specified sample range
 def example3():
@@ -50,4 +54,4 @@ if __name__ == '__main__':
     util.clean_result()
     #util.clean_all()
 
-    example1()
+    example2()

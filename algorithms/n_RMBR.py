@@ -32,7 +32,7 @@ class n_RMBR(steganographyAlgorithm):
         else:
             self.n = n
         
-        self.json_content = {"algorythm":"n_RMBR", "settings": {"n":self.n, "color":self.color ,"end_msg":self.end_msg}}
+        self.json_content = {"algorithm":"n_RMBR", "settings": {"n":self.n, "color":self.color ,"end_msg":self.end_msg}}
 
     @property
     def is_success(self):

@@ -34,7 +34,7 @@ class PVDMF(steganographyAlgorithm):
         else:
             self.color = ""
         
-        self.json_content = {"algorythm":"PVDMF", "settings": {"type":self.type ,"end_msg":self.end_msg, "color":self.color}}
+        self.json_content = {"algorithm":"PVDMF", "settings": {"type":self.type ,"end_msg":self.end_msg, "color":self.color}}
 
     @property
     def is_success(self):

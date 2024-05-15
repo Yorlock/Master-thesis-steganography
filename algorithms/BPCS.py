@@ -19,7 +19,7 @@ class BPCS(steganographyAlgorithm):
         self.is_success = False
         self.save_metadata = save_metadata
         self.error_msg = ""
-        self.json_content = {"algorythm":"BPCS", "settings": {"alpha":self.alpha}}
+        self.json_content = {"algorithm":"BPCS", "settings": {"alpha":self.alpha}}
 
     @property
     def is_success(self):

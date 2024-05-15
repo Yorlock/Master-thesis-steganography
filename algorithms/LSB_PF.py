@@ -27,7 +27,7 @@ class LSB_PF(steganographyAlgorithm):
         if color in self.colors:
             self.color = color
         
-        self.json_content = {"algorythm":"LSB_PF", "settings": {"password":self.password, "color":self.color, "end_msg":self.end_msg}}
+        self.json_content = {"algorithm":"LSB_PF", "settings": {"password":self.password, "color":self.color, "end_msg":self.end_msg}}
 
     @property
     def is_success(self):

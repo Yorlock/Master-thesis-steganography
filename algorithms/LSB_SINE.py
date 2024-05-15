@@ -38,7 +38,7 @@ class LSB_SINE(steganographyAlgorithm):
             self.sine_phase = sine_phase
         
         self.save_metadata = save_metadata        
-        self.json_content = {"algorythm":"LSB_SINE", "settings": {"round_accuracy":self.round_accuracy, "sine_phase":self.sine_phase ,"end_msg":self.end_msg}}
+        self.json_content = {"algorithm":"LSB_SINE", "settings": {"round_accuracy":self.round_accuracy, "sine_phase":self.sine_phase ,"end_msg":self.end_msg}}
 
     @property
     def is_success(self):

@@ -12,7 +12,7 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class LSB_PF(steganographyAlgorithm):
-    def __init__(self, password='12345', color='B', end_msg="$t3g0", save_metadata=False):
+    def __init__(self, password='12345', color='B', end_msg="$t3g0"):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.algorithm_path_dir = util.get_algorithm_path_dir(self)
@@ -27,7 +27,6 @@ class LSB_PF(steganographyAlgorithm):
         if color in self.colors:
             self.color = color
         
-        self.save_metadata = save_metadata
         self.json_content = {"algorythm":"LSB_PF", "settings": {"password":self.password, "color":self.color, "end_msg":self.end_msg}}
 
     @property
@@ -115,8 +114,7 @@ class LSB_PF(steganographyAlgorithm):
         message = msg_file.read()
         msg_file.close()
 
-        if self.save_metadata:
-            start_time = time()
+        start_time = time()
 
         cipher = AESCipher(self.password)
         message = cipher.encrypt(message)
@@ -159,10 +157,9 @@ class LSB_PF(steganographyAlgorithm):
                     break
                 index_pixel += 1
 
-        if self.save_metadata:
-            end_time = time()
-            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
-            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+        end_time = time()
+        milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+        self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
 
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
@@ -185,8 +182,7 @@ class LSB_PF(steganographyAlgorithm):
 
         total_pixels = array.size//n
         
-        if self.save_metadata:
-            start_time = time()
+        start_time = time()
 
         _, pixels_index  = self.__get_MSB_filter__(array, total_pixels)
         password_bits = ''.join([format(ord(i), "08b") for i in self.password])
@@ -237,10 +233,9 @@ class LSB_PF(steganographyAlgorithm):
         cipher = AESCipher(self.password)
         message = cipher.decrypt(enc_message[:-len(end_msg_base64)])
 
-        if self.save_metadata:
-            end_time = time()
-            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
-            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+        end_time = time()
+        milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+        self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
         
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)

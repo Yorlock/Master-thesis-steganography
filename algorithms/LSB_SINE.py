@@ -37,7 +37,7 @@ class LSB_SINE(steganographyAlgorithm):
         else:
             self.sine_phase = sine_phase
         
-        self.save_metadata = save_metadata
+        self.save_metadata = save_metadata        
         self.json_content = {"algorythm":"LSB_SINE", "settings": {"round_accuracy":self.round_accuracy, "sine_phase":self.sine_phase ,"end_msg":self.end_msg}}
 
     @property
@@ -125,8 +125,7 @@ class LSB_SINE(steganographyAlgorithm):
         message = msg_file.read()
         msg_file.close()
 
-        if self.save_metadata:
-            start_time = time()
+        start_time = time()
 
         if img.mode == 'RGB':
             n = 3
@@ -163,10 +162,9 @@ class LSB_SINE(steganographyAlgorithm):
                 array[pixel_index][color] = int(bits_array, 2)
                 bit_embedded += 1
 
-        if self.save_metadata:
-            end_time = time()
-            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
-            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+        end_time = time()
+        milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+        self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
 
         array=array.reshape(h, w, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
@@ -201,8 +199,7 @@ class LSB_SINE(steganographyAlgorithm):
             n = 4
         total_pixels = array.size//n
 
-        if self.save_metadata:
-            start_time = time()
+        start_time = time()
 
         hidden_bits = ""
         message = ""
@@ -246,10 +243,9 @@ class LSB_SINE(steganographyAlgorithm):
             self.error_msg = "No Hidden Message Found\n"
             return
 
-        if self.save_metadata:
-            end_time = time()
-            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
-            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+        end_time = time()
+        milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+        self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
 
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)

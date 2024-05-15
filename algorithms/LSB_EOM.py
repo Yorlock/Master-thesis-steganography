@@ -7,7 +7,7 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class LSB_EOM(steganographyAlgorithm):
-    def __init__(self, k=1, end_msg="$t3g0", save_metadata=False):
+    def __init__(self, k=1, end_msg="$t3g0"):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.algorithm_path_dir = util.get_algorithm_path_dir(self)
@@ -22,7 +22,6 @@ class LSB_EOM(steganographyAlgorithm):
             self.k = 7
             self.error_msg += "The value of parameter k has been changed to 7."
         
-        self.save_metadata = save_metadata
         self.json_content = {"algorythm":"LSB_EOM", "settings": {"k":self.k, "end_msg":self.end_msg}}
 
     @property
@@ -110,8 +109,7 @@ class LSB_EOM(steganographyAlgorithm):
         message = msg_file.read()
         msg_file.close()
 
-        if self.save_metadata:
-            start_time = time()
+        start_time = time()
 
         if img.mode == 'RGB':
             n = 3
@@ -129,10 +127,10 @@ class LSB_EOM(steganographyAlgorithm):
             return
 
         array = self.__hide_text__(total_pixels, req_bits, array, b_message)
-        if self.save_metadata:
-            end_time = time()
-            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
-            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+            
+        end_time = time()
+        milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+        self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
 
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
@@ -161,8 +159,7 @@ class LSB_EOM(steganographyAlgorithm):
         is_end = False
         left_bits = ''
         
-        if self.save_metadata:
-            start_time = time()
+        start_time = time()
 
         for p in range(total_pixels):
             if is_end:
@@ -193,10 +190,9 @@ class LSB_EOM(steganographyAlgorithm):
             self.error_msg = "No Hidden Message Found\n"
             return
 
-        if self.save_metadata:
-            end_time = time()
-            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
-            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+        end_time = time()
+        milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+        self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
 
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)

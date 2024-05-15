@@ -10,7 +10,7 @@ import util
 # the type parameter allows you to change the capacity of the hidden bits when QVD is used
 # k parameter allows you to specify how many bits should be hidden in one byte when LSB is used
 class QVD_8D(steganographyAlgorithm):
-    def __init__(self, end_msg="$t3g0", color="", type=3, k=4, estimation=True, save_metadata=False):
+    def __init__(self, end_msg="$t3g0", color="", type=3, k=4, estimation=True):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.algorithm_path_dir = util.get_algorithm_path_dir(self)
@@ -46,7 +46,6 @@ class QVD_8D(steganographyAlgorithm):
             self.type = 3
             self.type_capacity = np.array([3, 3, 4, 5])
         
-        self.save_metadata = save_metadata
         self.json_content = {"algorythm":"QVD_8D", "settings": {"type":self.type ,"end_msg":self.end_msg, "color":self.color, "k":self.k}}
 
     @property
@@ -134,8 +133,7 @@ class QVD_8D(steganographyAlgorithm):
         message = msg_file.read()
         msg_file.close()
 
-        if self.save_metadata:
-            start_time = time()
+        start_time = time()
 
         if img.mode == 'RGB':
             n = 3
@@ -155,10 +153,9 @@ class QVD_8D(steganographyAlgorithm):
         enc_block_list = self.__hide_text__(req_bits, block_list, quotient_block_list, reminder_block_list, b_message, n)
         enc_matrix = self.__update_matrix__(matrix, enc_block_list, width, height)
         
-        if self.save_metadata:
-            end_time = time()
-            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
-            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+        end_time = time()
+        milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+        self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
         
         enc_img = Image.fromarray(enc_matrix.astype('uint8'), img.mode)
         enc_img.save(self.stego_img_path)
@@ -179,8 +176,7 @@ class QVD_8D(steganographyAlgorithm):
         elif img.mode == 'RGBA':
             n = 4
 
-        if self.save_metadata:
-            start_time = time()
+        start_time = time()
 
         block_list = self.__get_block_list__(matrix, width, height)
         block_bits = ""
@@ -212,10 +208,9 @@ class QVD_8D(steganographyAlgorithm):
             self.error_msg = "No Hidden Message Found\n"
             return
 
-        if self.save_metadata:
-            end_time = time()
-            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
-            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+        end_time = time()
+        milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+        self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
 
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)

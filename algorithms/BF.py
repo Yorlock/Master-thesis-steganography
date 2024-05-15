@@ -8,7 +8,7 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class BF(steganographyAlgorithm):
-    def __init__(self, type=1, color="", save_metadata=False):
+    def __init__(self, type=1, color=""):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.algorithm_path_dir = util.get_algorithm_path_dir(self)
@@ -29,7 +29,6 @@ class BF(steganographyAlgorithm):
         else:
             self.color = ""
         
-        self.save_metadata = save_metadata
         self.json_content = {"algorythm":"BF", "settings": {"type":self.type, "color":self.color}}
 
     @property
@@ -117,8 +116,7 @@ class BF(steganographyAlgorithm):
         message = msg_file.read()
         msg_file.close()
 
-        if self.save_metadata:
-            start_time = time()
+        start_time = time()
 
         if img.mode == 'RGB':
             n = 3
@@ -152,10 +150,9 @@ class BF(steganographyAlgorithm):
         self.__calculate_location_map__(total_pixels, array)
         array = self.__hide_text__(array, b_message)
         
-        if self.save_metadata:
-            end_time = time()
-            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
-            self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
+        end_time = time()
+        milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+        self.json_content["milli_sec_elapsed_encode"] =  milli_sec_elapsed
 
         array=array.reshape(height, width, n)
         enc_img = Image.fromarray(array.astype('uint8'), img.mode)
@@ -177,8 +174,7 @@ class BF(steganographyAlgorithm):
             n = 4
         total_pixels = array.size//n
 
-        if self.save_metadata:
-            start_time = time()
+        start_time = time()
 
         hidden_bits = self.__get_hidded_bits__(total_pixels, array)
         hidden_bits = [hidden_bits[i:i+8] for i in range(0, len(hidden_bits), 8)]
@@ -189,10 +185,9 @@ class BF(steganographyAlgorithm):
         for i in range(len(hidden_bits)):
             message += chr(int(hidden_bits[i], 2))
 
-        if self.save_metadata:
-            end_time = time()
-            milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
-            self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
+        end_time = time()
+        milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
+        self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
 
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)

@@ -213,7 +213,7 @@ class LSB_EOM(steganographyAlgorithm):
                 value_old_bin = bin(value_old)[2:]
                 value_old_bin = '0' * (8 - len(value_old_bin)) + value_old_bin
                 b_message_bit = b_message[index:index+self.k]
-                b_message_bit = '0' * (self.k - len(b_message_bit)) + b_message_bit
+                b_message_bit = b_message_bit + '0' * (self.k - len(b_message_bit))
                 value_new_int = value_old_bin[:8-self.k] + b_message_bit
                 value_new = int(value_new_int, 2)
                 index += self.k

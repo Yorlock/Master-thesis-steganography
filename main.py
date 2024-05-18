@@ -23,6 +23,7 @@ def example1():
 
     f = open(lsb.metadata_path, "r")
     data = json.load(f)
+    f.close()
     print(data['milli_sec_elapsed_encode'])
     print(data['settings']['type'])
     print(data['settings'])
@@ -37,7 +38,8 @@ def example2():
         util.check_error(algorithm)
         algorithm.decode()
         util.check_error(algorithm)
-        metrics_calculator.setup(algorithm.algorithm_path_dir, util.get_carrier_color(2))
+        metrics_calculator.setup(algorithm, util.get_carrier_color(2), util.get_secret_msg(1))
+        metrics_calculator.run()
 
 # define multiple objects and run them in the specified sample range
 def example3():

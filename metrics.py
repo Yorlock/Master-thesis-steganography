@@ -11,18 +11,25 @@ class metrics_calculator:
         self.stego_width = 0
         self.stego_height = 0
         self.stego_mode = ""
+        self.hidden_message = ""
+        self.algorithm = ""
         self.result_file = open("results.txt", "w")
-        self.result_file.write("")  # TODO
+        self.result_file.write("Name;ET;DT;MSE;PSNR;QI;SSIM;AEC;BPB;ABCPB;DM\n")
         
     
-    def setup(self, alg_path_dir, sample_image, sample_message):
-        sample = Image.open(sample_image, 'r')
+    def setup(self, algorithm, sample_image_path, sample_message_path):
+        self.algorithm = algorithm
+        sample = Image.open(sample_image_path, 'r')
         self.sample_array = np.array(list(sample.getdata()))
         self.sample_mode = sample.mode
         if sample.mode == 'RGBA':
             self.sample_array = np.delete(self.sample_array, 3, 1)
 
-        stego = Image.open(os.path.join(alg_path_dir, "stego.png"), 'r')
+        stego = Image.open(os.path.join(self.algorithm.algorithm_path_dir, "stego.png"), 'r')
+        msg_file = open(sample_message_path,'r')
+        self.hidden_message = msg_file.read()
+        msg_file.close()
+
         self.stego_width, self.stego_height = stego.size
         self.stego_array = np.array(list(stego.getdata()))
         self.stego_mode = stego.mode
@@ -31,8 +38,31 @@ class metrics_calculator:
 
 
     def run(self):
-        pass
+        Name = type(self.algorithm).__name__
+
+        for key, value in self.algorithm.json_content['settings'].items():
+            Name += f"_{key}={value}"
+
+        ET = self.algorithm.json_content['milli_sec_elapsed_encode']
+        DT = self.algorithm.json_content['milli_sec_elapsed_decode']
+        MSE = self.__MSE__()
+        PSNR = self.__PSNR__()
+        QI = self.__quality_index__()
+        SSIM = self.__SSIM__()
+        AEC = self.__average_embedding_capacity__()
+        BPB = self.__bits_per_byte__()
+        ABCPB = self.__average_bits_changed_per_byte__()
+        
+        #TODO destroy img
+        destroyed_image = ""
+        DM = 0 #self.__calculate_destroyed_message__(destroyed_image)
+
+        self.result_file.write(f"{Name};{ET};{DT};{MSE};{PSNR};{QI};{SSIM};{AEC};{BPB};{ABCPB};{DM}\n")
+
     
+    def __binarize__(self):
+        pass
+
 
     def __MSE__(self):
         return np.mean(np.square(self.sample_array - self.stego_array))
@@ -133,7 +163,7 @@ class metrics_calculator:
         horizontal_damaged_img = Image.fromarray(horizontal_damaged_array.astype('uint8'), mode=self.stego_mode)
         horizontal_damaged_img.save("damaged_horizontal.png")
 
-
+    # How many bytes have changed
     def __average_embedding_capacity__(self):
         sample = self.sample_array.flatten()
         stego = self.stego_array.flatten()
@@ -141,7 +171,7 @@ class metrics_calculator:
         difference_normalized = [1 if x != 0 else 0 for x in difference]
         return sum(difference_normalized)/len(sample)
 
-
+    # How much bytes have changed
     def __bits_per_byte__(self):
         sample = self.sample_array.flatten()
         stego = self.stego_array.flatten()
@@ -149,8 +179,14 @@ class metrics_calculator:
         difference_abs = [abs(x) for x in difference]
         return sum(difference_abs)/len(sample)
 
-
+    # How much the 0 and 1 have changed (we are not interested in the final pixel value)
     def __average_bits_changed_per_byte__(self):
-        difference = np.array([int(x) ^ int(y) for x, y in zip(self.sample_array, self.stego_array)])
+        sample = self.sample_array.flatten()
+        stego = self.stego_array.flatten()
+        difference = np.array([int(x) ^ int(y) for x, y in zip(sample, stego)])
         difference_count = np.array([bin(x)[2:].count('1') for x in difference])
-        return sum(difference_count)/len(self.sample_array)
+        return sum(difference_count)/len(sample)
+
+
+    def __calculate_destroyed_message__(self, destroyed_image):
+        pass

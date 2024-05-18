@@ -177,7 +177,7 @@ class metrics_calculator:
         stego = self.stego_array.flatten()
         difference = sample - stego
         difference_abs = [abs(x) for x in difference]
-        return sum(difference_abs)/len(sample)
+        return sum(difference_abs)/len(list(filter(lambda num: num != 0, difference_abs)))
 
     # How much the 0 and 1 have changed (we are not interested in the final pixel value)
     def __average_bits_changed_per_byte__(self):

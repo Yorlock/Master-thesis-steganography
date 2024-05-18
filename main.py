@@ -51,6 +51,9 @@ def example3():
             algorithm.decode()
             util.check_error(algorithm)
 
+def master_test():
+    pass
+
 if __name__ == '__main__':
     util.init_instance()
     util.clean_result()

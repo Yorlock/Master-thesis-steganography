@@ -11,6 +11,10 @@ def init_instance():
     carrier_color_dir_path = os.path.join(sample_dir_path, "carrier")
     global secret_msg_dir_path
     secret_msg_dir_path = os.path.join(sample_dir_path, "secret")
+    global carrier_test_color_dir_path
+    carrier_test_color_dir_path = os.path.join(sample_dir_path, "carrier_test")
+    global secret_test_msg_dir_path
+    secret_test_msg_dir_path = os.path.join(sample_dir_path, "secret_test")
 
 def clean_result():
     dirs = glob.glob(result_dir_path + '/*')
@@ -44,6 +48,12 @@ def get_carrier_color(sample_number):
 
 def get_secret_msg(sample_number):
     return os.path.join(secret_msg_dir_path, rf"sample{str(sample_number)}.txt")
+
+def get_carrier_test_color(sample_number):
+    return os.path.join(carrier_test_color_dir_path, rf"sample{str(sample_number)}.png")
+
+def get_secret_test_msg(sample_number):
+    return os.path.join(secret_test_msg_dir_path, rf"sample{str(sample_number)}.txt")
 
 def get_algorithm_path_dir(self):
     class_name = type(self).__name__

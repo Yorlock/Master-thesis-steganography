@@ -12,6 +12,7 @@ from algorithms.BF import BF
 import util
 import metrics
 import json
+import filecmp
 
 # define object and run it  in the provided sample
 def example1():
@@ -65,8 +66,13 @@ def master_test():
                     algorithm.encode(util.get_carrier_test_color(i), util.get_secret_test_msg(i))
                     util.check_error(algorithm)
                     algorithm.decode()
+
+                    if filecmp.cmp(util.get_secret_test_msg(i), algorithm.destination_path):
+                        print("Decoded msg is different from the original one")
+                        raise Exception()
+
                     util.check_error(algorithm)
-                    metrics_calculator.setup(algorithm, util.get_carrier_color(2), util.get_secret_msg(1))
+                    metrics_calculator.setup(algorithm, util.get_carrier_test_color(i), util.get_secret_test_msg(i))
                     metrics_calculator.run()
                 
                 except:

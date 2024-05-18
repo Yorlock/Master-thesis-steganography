@@ -60,7 +60,7 @@ class metrics_calculator:
         self.result_file.write(f"{Name};{ET};{DT};{MSE};{PSNR};{QI};{SSIM};{AEC};{BPB};{ABCPB};{DM}\n")
 
     
-    def __binarize__(self):
+    def binarize(self):
         pass
 
 

@@ -46,7 +46,11 @@ class QVD_8D(steganographyAlgorithm):
             self.type = 3
             self.type_capacity = np.array([3, 3, 4, 5])
         
-        self.json_content = {"algorithm":"QVD_8D", "settings": {"type":self.type ,"end_msg":self.end_msg, "color":self.color, "k":self.k}}
+        json_color = self.color
+        if json_color == "":
+            json_color = "RGB"
+
+        self.json_content = {"algorithm":"QVD_8D", "settings": {"type":self.type ,"end_msg":self.end_msg, "color":json_color, "k":self.k}}
 
     @property
     def is_success(self):

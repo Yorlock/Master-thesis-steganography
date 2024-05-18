@@ -52,11 +52,32 @@ def example3():
             util.check_error(algorithm)
 
 def master_test():
-    pass
+    algorithms_list = []
+    algorithms_list.append([LSB_EOM(end_msg="G$:+.3", k=1), LSB_EOM(k=2), LSB_EOM(k=3)])
+    algorithms_list.append([LSB_SOM(k=1), LSB_SOM(k=2), LSB_SOM(k=3)])
+    algorithms_list.append([LSB_PF(color='R'), LSB_PF(color='G'), LSB_PF(color='B')])
+
+    metrics_calculator = metrics.metrics_calculator()
+    for algorithms in algorithms_list:
+        for algorithm in algorithms:
+            for i in range(1,5):
+                try:
+                    algorithm.encode(util.get_carrier_test_color(i), util.get_secret_test_msg(i))
+                    util.check_error(algorithm)
+                    algorithm.decode()
+                    util.check_error(algorithm)
+                    metrics_calculator.setup(algorithm, util.get_carrier_color(2), util.get_secret_msg(1))
+                    metrics_calculator.run()
+                
+                except:
+                    #add log file
+                    print("Something went wrong")
+
+    #metrics_calculator.binarize()
 
 if __name__ == '__main__':
     util.init_instance()
     util.clean_result()
     #util.clean_all()
 
-    example2()
+    master_test()

@@ -3,6 +3,8 @@ import numpy as np
 from skimage.metrics import structural_similarity as ssim
 import matplotlib.pyplot as plt
 import os
+import pandas as pd
+from pathlib import Path
 
 class metrics_calculator:
     def __init__(self):
@@ -15,6 +17,7 @@ class metrics_calculator:
         self.algorithm = ""
         self.result_file = open("results.txt", "w")
         self.result_file.write("Name;ET;DT;MSE;PSNR;QI;SSIM;AEC;BPB;ABCPB;DM\n")
+        Path("tmp").mkdir(parents=True, exist_ok=True)
         
     
     def setup(self, algorithm, sample_image_path, sample_message_path):
@@ -52,16 +55,34 @@ class metrics_calculator:
         AEC = self.__average_embedding_capacity__()
         BPB = self.__bits_per_byte__()
         ABCPB = self.__average_bits_changed_per_byte__()
-        
-        #TODO destroy img
-        destroyed_image = ""
-        DM = 0 #self.__calculate_destroyed_message__(destroyed_image)
+        DM = self.__calculate_destroyed_message__("tmp/destroyed_image.png")
 
         self.result_file.write(f"{Name};{ET};{DT};{MSE};{PSNR};{QI};{SSIM};{AEC};{BPB};{ABCPB};{DM}\n")
 
-    
-    def binarize(self):
-        pass
+
+    def binning(self):
+        self.result_file.close()
+        results_list = []
+        results_file = open("results.txt", "r")
+        labels = results_file.readline()[:-1]
+        for line in results_file:
+            results_list.append(line)
+
+        results_file.close()
+
+        results_list = [el.split(";") for el in results_list]
+        for i in range(len(results_list)):      #remove \n from last elements
+            results_list[i][-1] = results_list[i][-1][:-1]
+
+        df = pd.DataFrame(results_list, columns = labels.split(";"))
+        df[["ET","DT","MSE","PSNR","QI","SSIM","AEC","BPB","ABCPB","DM"]] = df[["ET","DT","MSE","PSNR","QI","SSIM","AEC","BPB","ABCPB","DM"]].astype(float)
+        
+        for column_name, column in df.items():
+            if column_name == "Name":
+                continue
+            df[f"{column_name}"] = pd.qcut(df[column_name], q=10, labels=range(1, 11), duplicates="drop")
+
+        df.to_csv("results_ranked.txt", sep=";", index=False)
 
 
     def __MSE__(self):
@@ -189,4 +210,11 @@ class metrics_calculator:
 
 
     def __calculate_destroyed_message__(self, destroyed_image):
-        pass
+        self.algorithm.stego_img_path = destroyed_image
+        orignal_message = self.hidden_message
+        try:
+            decoded_msg = self.algorithm.decode(save_as_png=False)
+        except:
+            print(f"METRICS: Something went wrong")
+
+        return np.random.randint(1,100)

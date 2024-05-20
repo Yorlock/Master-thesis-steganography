@@ -158,7 +158,7 @@ class PVDMF(steganographyAlgorithm):
         enc_img.save(self.stego_img_path)
         self.is_success = True
 
-    def decode(self):
+    def decode(self, save_as_png=True):
         if not self.is_success:
             self.error_msg = "Encode failed"
             return
@@ -235,10 +235,13 @@ class PVDMF(steganographyAlgorithm):
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
-        destination_file = open(self.destination_path, "w")
-        destination_file.write(message[:-len(self.end_msg)])
-        destination_file.close()
+        if save_as_png:
+            destination_file = open(self.destination_path, "w")
+            destination_file.write(message[:-len(self.end_msg)])
+            destination_file.close()
+
         self.is_success = True
+        return message[:-len(self.end_msg)]
 
     def __get_color_range__(self):
         if self.color == "":

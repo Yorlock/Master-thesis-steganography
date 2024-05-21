@@ -209,20 +209,22 @@ class chain_LSB(steganographyAlgorithm):
         milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
         self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
 
+        message = message[:-len(self.end_msg)]
+
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
         if save_to_txt:
             destination_file = open(self.destination_path, "w")
-            destination_file.write(message[:-len(self.end_msg)])
+            destination_file.write(message)
             destination_file.close()
 
         if pipe is not None:
-            pipe.send(message[:-len(self.end_msg)])
+            pipe.send(message)
             pipe.close()
 
         self.is_success = True
-        return message[:-len(self.end_msg)]
+        return message
 
     def __hide_text__(self, pointer_length, b_message, req_chunks, possible_chunks, array):
         messages_chunks = self.__split_string_into_substrings__(b_message, self.k)

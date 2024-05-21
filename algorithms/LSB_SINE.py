@@ -250,17 +250,19 @@ class LSB_SINE(steganographyAlgorithm):
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
+        message = message[:-len(self.end_msg)]
+
         if save_to_txt:
             destination_file = open(self.destination_path, "w")
-            destination_file.write(message[:-len(self.end_msg)])
+            destination_file.write(message)
             destination_file.close()
 
         if pipe is not None:
-            pipe.send(message[:-len(self.end_msg)])
+            pipe.send(message)
             pipe.close()
 
         self.is_success = True
-        return message[:-len(self.end_msg)]
+        return message
     
     def __get_MSB_3__(self, number):
         number_bit = bin(number)[2:]

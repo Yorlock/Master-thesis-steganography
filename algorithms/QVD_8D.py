@@ -219,17 +219,19 @@ class QVD_8D(steganographyAlgorithm):
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
+        message = message[:-len(self.end_msg)]
+
         if save_to_txt:
             destination_file = open(self.destination_path, "w")
-            destination_file.write(message[:-len(self.end_msg)])
+            destination_file.write(message)
             destination_file.close()
 
         if pipe is not None:
-            pipe.send(message[:-len(self.end_msg)])
+            pipe.send(message)
             pipe.close()
 
         self.is_success = True
-        return message[:-len(self.end_msg)]
+        return message
 
     def __calculate_available_bits__(self, req_bits, matrix, cols, rows):
         available_bits = 0

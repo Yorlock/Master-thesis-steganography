@@ -197,18 +197,20 @@ class LSB_EOM(steganographyAlgorithm):
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
+        message = message[:-len(self.end_msg)]
+
         if save_to_txt:
             destination_file = open(self.destination_path, "w")
-            destination_file.write(message[:-len(self.end_msg)])
+            destination_file.write(message)
             destination_file.close()
             
         self.is_success = True
 
         if pipe is not None:
-            pipe.send(message[:-len(self.end_msg)])
+            pipe.send(message)
             pipe.close()
 
-        return message[:-len(self.end_msg)]
+        return message
 
     def __hide_text__(self, total_pixels, req_bits, array, b_message):
         index = 0

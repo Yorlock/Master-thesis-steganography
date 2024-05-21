@@ -137,7 +137,7 @@ class LSB_EOM(steganographyAlgorithm):
         enc_img.save(self.stego_img_path)
         self.is_success = True
 
-    def decode(self, save_as_png=True):
+    def decode(self, pipe=None, save_to_txt=True):
         if not self.is_success:
             self.error_msg = "Encode failed"
             return
@@ -197,12 +197,17 @@ class LSB_EOM(steganographyAlgorithm):
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
-        if save_as_png:
+        if save_to_txt:
             destination_file = open(self.destination_path, "w")
             destination_file.write(message[:-len(self.end_msg)])
             destination_file.close()
             
         self.is_success = True
+
+        if pipe is not None:
+            pipe.send(message[:-len(self.end_msg)])
+            pipe.close()
+
         return message[:-len(self.end_msg)]
 
     def __hide_text__(self, total_pixels, req_bits, array, b_message):

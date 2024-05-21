@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import os
 import pandas as pd
 from pathlib import Path
+from multiprocessing import Process, Pipe
+from Levenshtein import ratio
 
 class metrics_calculator:
     def __init__(self):
@@ -15,6 +17,7 @@ class metrics_calculator:
         self.stego_mode = ""
         self.hidden_message = ""
         self.algorithm = ""
+        self.destroyed_image_path = "tmp/damaged_stego.png"
         self.result_file = open("results.txt", "w")
         self.result_file.write("Name;ET;DT;MSE;PSNR;QI;SSIM;AEC;BPB;ABCPB;DM\n")
         Path("tmp").mkdir(parents=True, exist_ok=True)
@@ -55,7 +58,7 @@ class metrics_calculator:
         AEC = self.__average_embedding_capacity__()
         BPB = self.__bits_per_byte__()
         ABCPB = self.__average_bits_changed_per_byte__()
-        DM = self.__calculate_destroyed_message__("tmp/destroyed_image.png")
+        DM = self.__calculate_destroyed_message__()
 
         self.result_file.write(f"{Name};{ET};{DT};{MSE};{PSNR};{QI};{SSIM};{AEC};{BPB};{ABCPB};{DM}\n")
 
@@ -135,32 +138,7 @@ class metrics_calculator:
         fig.savefig("stego_histogram.png")
 
 
-    def __destroy_vertical_line__(self, n=10, columns=[], seed=0):
-        np.random.seed(seed)
-        columns = np.unique(columns)
-        if len(columns) > n:
-            columns = columns[:n]
-
-        while len(columns) < n:
-            columns = list(columns)
-            columns.append(np.random.randint(self.stego_width))
-            columns = np.unique(columns)
-
-        vertical_damaged_array = self.stego_array
-
-        for column in columns:
-            for i in range(self.stego_height):
-                vertical_damaged_array[column + i*self.stego_width] = [0, 0, 0]
-
-        if self.stego_mode == "RGBA":
-            vertical_damaged_array = np.concatenate((vertical_damaged_array, np.ones((self.stego_height*self.stego_width,1), dtype=int)*255), axis=1)
-
-        vertical_damaged_array = vertical_damaged_array.reshape(self.stego_height, self.stego_width, len(self.stego_mode))
-        vertical_damaged_img = Image.fromarray(vertical_damaged_array.astype('uint8'), mode=self.stego_mode)
-        vertical_damaged_img.save("damaged_vertical.png")
-
-
-    def __destroy_horizontal_line__(self, n=10, rows=[], seed=0):
+    def __destroy_image__(self, n=10, rows=[], columns=[], seed=0):
         np.random.seed(seed)
         rows = np.unique(rows)
         if len(rows) > n:
@@ -170,19 +148,28 @@ class metrics_calculator:
             rows = list(rows)
             rows.append(np.random.randint(self.stego_height))
             rows = np.unique(rows)
+        
+        while len(columns) < n:
+            columns = list(columns)
+            columns.append(np.random.randint(self.stego_width))
+            columns = np.unique(columns)
 
-        horizontal_damaged_array = self.stego_array
+        damaged_array = self.stego_array
 
         for row in rows:
             for i in range(self.stego_width):
-                horizontal_damaged_array[row*self.stego_width + i] = [0, 0, 0]
+                damaged_array[row*self.stego_width + i] = [0, 0, 0]
+
+        for column in columns:
+            for i in range(self.stego_height):
+                damaged_array[column + i*self.stego_width] = [0, 0, 0]
 
         if self.stego_mode == "RGBA":
-            horizontal_damaged_array = np.concatenate((horizontal_damaged_array, np.ones((self.stego_height*self.stego_width,1), dtype=int)*255), axis=1)
+            damaged_array = np.concatenate((damaged_array, np.ones((self.stego_height*self.stego_width,1), dtype=int)*255), axis=1)
 
-        horizontal_damaged_array = horizontal_damaged_array.reshape(self.stego_height, self.stego_width, len(self.stego_mode))
-        horizontal_damaged_img = Image.fromarray(horizontal_damaged_array.astype('uint8'), mode=self.stego_mode)
-        horizontal_damaged_img.save("damaged_horizontal.png")
+        damaged_array = damaged_array.reshape(self.stego_height, self.stego_width, len(self.stego_mode))
+        damaged_array = Image.fromarray(damaged_array.astype('uint8'), mode=self.stego_mode)
+        damaged_array.save(self.destroyed_image_path)
 
     # How many bytes have changed
     def __average_embedding_capacity__(self):
@@ -209,12 +196,28 @@ class metrics_calculator:
         return sum(difference_count)/len(sample)
 
 
-    def __calculate_destroyed_message__(self, destroyed_image):
-        self.algorithm.stego_img_path = destroyed_image
+    def __calculate_destroyed_message__(self):
+        self.__destroy_image__()
+        self.algorithm.stego_img_path = self.destroyed_image_path
         orignal_message = self.hidden_message
-        try:
-            decoded_msg = self.algorithm.decode(save_as_png=False)
+        
+        main_pipe, child_pipe = Pipe()
+        p_decode = Process(target=self.algorithm.decode, args=(child_pipe, False,))
+        try:       
+            p_decode.start()
+            p_decode.join(timeout=5)
         except:
-            print(f"METRICS: Something went wrong")
-
-        return np.random.randint(1,100)
+            p_decode.terminate()
+            print(f"{self.algorithm.json_content}: Błąd w podprocesie")
+            return 0
+        
+        if p_decode.exitcode == None:
+            p_decode.terminate()
+            p_decode.join()
+            print(f"{self.algorithm.json_content}: Timeout")
+            return 0
+        
+        decoded_msg = main_pipe.recv()
+        print(f"{self.algorithm.json_content}: Wiadomość otrzymana")
+        difference = ratio(orignal_message, decoded_msg)
+        return difference

@@ -112,7 +112,7 @@ class BPCS(steganographyAlgorithm):
     
         self.is_success = True
 
-    def decode(self, save_as_png=True):
+    def decode(self, pipe=None, save_to_txt=True):
         if not self.is_success:
             self.error_msg = "Encode failed"
             return
@@ -121,7 +121,7 @@ class BPCS(steganographyAlgorithm):
             
         start_time = time()
 
-        message = bpcs.decode(self.stego_img_path, self.destination_path, self.alpha, save_as_png)
+        message = bpcs.decode(self.stego_img_path, self.destination_path, self.alpha, save_to_txt)
 
         end_time = time()
         milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
@@ -129,6 +129,10 @@ class BPCS(steganographyAlgorithm):
 
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
+
+        if pipe is not None:
+            pipe.send(message)
+            pipe.close()
             
         self.is_success = True
         return message

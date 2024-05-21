@@ -55,31 +55,39 @@ def example3():
 def master_test():
     log_file = open("log.txt", "w")
     algorithms_list = []
-    algorithms_list.append([LSB_EOM(end_msg="G$:+.3", k=1), LSB_EOM(k=2), LSB_EOM(k=3)])
-    algorithms_list.append([LSB_SOM(k=1), LSB_SOM(k=2), LSB_SOM(k=3)])
-    algorithms_list.append([LSB_PF(color='R'), LSB_PF(color='G'), LSB_PF(color='B')])
+    algorithms_list.append([BF()])
+    algorithms_list.append([BPCS()])
+    #algorithms_list.append([chain_LSB()])
+    algorithms_list.append([LSB_EOM()])
+    algorithms_list.append([LSB_PF()])
+    algorithms_list.append([LSB_SINE()])
+    algorithms_list.append([LSB_SOM()]) 
+    algorithms_list.append([n_RMBR()])
+    algorithms_list.append([PVD_8D()])
+    algorithms_list.append([PVDMF()])
+    algorithms_list.append([QVD_8D()])
 
     metrics_calculator = metrics.metrics_calculator()
     for algorithms in algorithms_list:
         for algorithm in algorithms:
             for i in range(1,2):
                 try:
-                    algorithm.encode(util.get_carrier_color(i), util.get_secret_msg(i))
-                    algorithm.decode()
+                    algorithm.encode(util.get_carrier_test_color(i), util.get_secret_test_msg(i))
+                    algorithm.decode(pipe=None)
 
-                    if not filecmp.cmp(util.get_secret_msg(i), algorithm.destination_path):
-                        log_file.write(f"WARNING: {algorithm.json_content}, {util.get_carrier_color(i)}, {util.get_secret_msg(i)}, Decoded message is different from the original one\n")
+                    if not filecmp.cmp(util.get_secret_test_msg(i), algorithm.destination_path):
+                        log_file.write(f"WARNING: {algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}, Decoded message is different from the original one\n")
                         print(f"{algorithm.json_content}, i={i}: Decoded message is different from the original one")
                     else:
-                        metrics_calculator.setup(algorithm, util.get_carrier_color(i), util.get_secret_msg(i))
+                        metrics_calculator.setup(algorithm, util.get_carrier_test_color(i), util.get_secret_test_msg(i))
                         metrics_calculator.run()
-                        log_file.write(f"SUCCESS: {algorithm.json_content}, {util.get_carrier_color(i)}, {util.get_secret_msg(i)}\n")
+                        log_file.write(f"SUCCESS: {algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}\n")
                 
                 except:
-                    log_file.write(f"ERROR: {algorithm.json_content}, {util.get_carrier_color(i)}, {util.get_secret_msg(i)}\n")
+                    log_file.write(f"ERROR: {algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}\n")
                     print(f"{algorithm.json_content}: Something went wrong")
     log_file.close()
-    metrics_calculator.binning()
+    #metrics_calculator.binning()
 
 if __name__ == '__main__':
     util.init_instance()

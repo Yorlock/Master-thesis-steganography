@@ -144,7 +144,7 @@ class chain_LSB(steganographyAlgorithm):
         enc_img.save(self.stego_img_path)
         self.is_success = True
 
-    def decode(self, save_as_png=True):
+    def decode(self, pipe=None, save_to_txt=True):
         if not self.is_success:
             self.error_msg = "Encode failed"
             return
@@ -212,10 +212,14 @@ class chain_LSB(steganographyAlgorithm):
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
-        if save_as_png:
+        if save_to_txt:
             destination_file = open(self.destination_path, "w")
             destination_file.write(message[:-len(self.end_msg)])
             destination_file.close()
+
+        if pipe is not None:
+            pipe.send(message[:-len(self.end_msg)])
+            pipe.close()
 
         self.is_success = True
         return message[:-len(self.end_msg)]

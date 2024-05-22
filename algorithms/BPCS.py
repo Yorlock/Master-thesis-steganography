@@ -11,10 +11,6 @@ class BPCS(steganographyAlgorithm):
     def __init__(self, alpha=0.45, save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
-        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
-        self.stego_img_path = util.get_encode_path(self)
-        self.destination_path = util.get_decode_path(self)
-        self.metadata_path = util.get_metadata_path(self)
         self.alpha = alpha
         self.is_success = False
         self.save_metadata = save_metadata
@@ -98,6 +94,11 @@ class BPCS(steganographyAlgorithm):
         self.error_msg = ""
 
     def encode(self, img_path, msg_path):
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.metadata_path = util.get_metadata_path(self)
+    
         bitplatedir=''
         if self.save_metadata:
             bitplatedir = self.algorithm_path_dir

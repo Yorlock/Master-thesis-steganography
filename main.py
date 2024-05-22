@@ -64,10 +64,10 @@ def master_test():
     sets_img_msg = [(i, j) for i in range(1, 11) for j in range(1, 6)]
 
     algorithms_list = []
-    algorithms_list.append([BF()])
+    algorithms_list.append([BF(), BF(color="R")])
     algorithms_list.append([BPCS()])
     algorithms_list.append([chain_LSB()])
-    algorithms_list.append([LSB_EOM()])
+    algorithms_list.append([LSB_EOM(), LSB_EOM(k=2), LSB_EOM(k=3)])
     algorithms_list.append([LSB_PF()])
     algorithms_list.append([LSB_SINE()])
     algorithms_list.append([LSB_SOM()]) 

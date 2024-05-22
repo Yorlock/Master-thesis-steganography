@@ -9,6 +9,8 @@ from algorithms.chain_LSB import chain_LSB
 from algorithms.n_RMBR import n_RMBR
 from algorithms.PVDMF import PVDMF
 from algorithms.BF import BF
+from pathlib import Path
+import datetime
 import util
 import metrics
 import json
@@ -53,6 +55,12 @@ def example3():
             util.check_error(algorithm)
 
 def master_test():
+    Path("tmp").mkdir(parents=True, exist_ok=True)
+    destroyed_image_path = "tmp/damaged_stego.png"
+    result_file_path = "tmp/results.txt"
+    result_ranked_file_path = "tmp/results_ranked.txt"
+    log_file_path = "tmp/log.txt"
+
     algorithms_list = []
     
     algorithms_list.append([BF()])
@@ -67,40 +75,40 @@ def master_test():
     algorithms_list.append([PVDMF()])
     algorithms_list.append([QVD_8D()])
 
-    log_file = open("log.txt", "w")
-    metrics_calculator = metrics.metrics_calculator(log_file)
+    log_file = open(log_file_path, "w")
+    metrics_calculator = metrics.metrics_calculator(log_file, destroyed_image_path, result_file_path, result_ranked_file_path)
     for algorithms in algorithms_list:
         for algorithm in algorithms:
             for i in range(1,2):
-                log_file.write(f"{algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}\n")
-                print(f"{algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}")
+                log_file.write(f"{datetime.datetime.now()} {algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}\n")
+                print(f"{datetime.datetime.now()} {algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}")
                 try:
                     algorithm.encode(util.get_carrier_test_color(i), util.get_secret_test_msg(i))
                     algorithm.decode(pipe=None)
 
                     if not filecmp.cmp(util.get_secret_test_msg(i), algorithm.destination_path):
-                        log_file.write(f"ERROR: decoded message is different from the original one\n")
-                        print(f"ERROR: Decoded message is different from the original one")
+                        log_file.write(f"{datetime.datetime.now()} ERROR: decoded message is different from the original one\n")
+                        print(f"{datetime.datetime.now()} ERROR: Decoded message is different from the original one")
                     else:
                         metrics_calculator.setup(algorithm, util.get_carrier_test_color(i), util.get_secret_test_msg(i))
                         metrics_calculator.run()
-                        log_file.write(f"SUCCESS\n")
-                        print(f"SUCCESS\n")
+                        log_file.write(f"{datetime.datetime.now()} SUCCESS\n")
+                        print(f"{datetime.datetime.now()} SUCCESS\n")
                 
                 except Exception as e:
-                    log_file.write(f"ERROR: {e}\n")
-                    print(f"ERROR: {e}")
+                    log_file.write(f"{datetime.datetime.now()} ERROR: {e}\n")
+                    print(f"{datetime.datetime.now()} ERROR: {e}")
                 
                 log_file.write("\n")
                 print("")
     
     try:
         metrics_calculator.binning()
-        log_file.write(f"SUCCESS: Binning\n")
-        print(f"SUCCESS: Binning")
+        log_file.write(f"{datetime.datetime.now()} SUCCESS: Binning\n")
+        print(f"{datetime.datetime.now()} SUCCESS: Binning")
     except Exception as e:
-        log_file.write(f"ERROR: Binning\n")
-        print(f"ERROR: Binning")
+        log_file.write(f"{datetime.datetime.now()} ERROR: Binning, {e}\n")
+        print(f"{datetime.datetime.now()} ERROR: Binning, {e}")
 
     log_file.close()
 

@@ -1,0 +1,64 @@
+2024-05-22 13:11:36.785617 {'algorithm': 'BF', 'settings': {'type': 1, 'color': 'RGB'}}, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\carrier_test\sample1.png, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\secret_test\sample1.txt
+2024-05-22 13:11:37.402276 SUCCESS: Setup
+2024-05-22 13:11:42.677007 SUCCESS: Message received from subprocess
+2024-05-22 13:11:42.677909 SUCCESS: Run
+2024-05-22 13:11:42.677909 SUCCESS
+
+2024-05-22 13:11:42.678910 {'algorithm': 'BPCS', 'settings': {'alpha': 0.45}}, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\carrier_test\sample1.png, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\secret_test\sample1.txt
+2024-05-22 13:11:48.194424 ERROR: float division by zero
+
+2024-05-22 13:11:48.196485 {'algorithm': 'chain_LSB', 'settings': {'k': 0, 'end_msg': '$t3g0'}}, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\carrier_test\sample1.png, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\secret_test\sample1.txt
+2024-05-22 13:11:48.467751 SUCCESS: Setup
+2024-05-22 13:11:53.349765 WARNING: No message from subprocess
+2024-05-22 13:11:53.350765 SUCCESS: Run
+2024-05-22 13:11:53.350765 SUCCESS
+
+2024-05-22 13:11:53.351766 {'algorithm': 'LSB_EOM', 'settings': {'k': 1, 'end_msg': '$t3g0'}}, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\carrier_test\sample1.png, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\secret_test\sample1.txt
+2024-05-22 13:11:53.646761 SUCCESS: Setup
+2024-05-22 13:11:58.672872 SUCCESS: Message received from subprocess
+2024-05-22 13:11:58.673834 SUCCESS: Run
+2024-05-22 13:11:58.673834 SUCCESS
+
+2024-05-22 13:11:58.674835 {'algorithm': 'LSB_PF', 'settings': {'password': '12345', 'color': 'B', 'end_msg': '$t3g0'}}, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\carrier_test\sample1.png, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\secret_test\sample1.txt
+2024-05-22 13:12:00.114373 SUCCESS: Setup
+2024-05-22 13:12:05.853223 WARNING: Timeout in subprocess
+2024-05-22 13:12:05.854148 SUCCESS: Run
+2024-05-22 13:12:05.854148 SUCCESS
+
+2024-05-22 13:12:05.855158 {'algorithm': 'LSB_SINE', 'settings': {'round_accuracy': 2, 'sine_phase': 1.0, 'end_msg': '$t3g0'}}, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\carrier_test\sample1.png, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\secret_test\sample1.txt
+2024-05-22 13:12:06.260747 SUCCESS: Setup
+2024-05-22 13:12:11.621324 SUCCESS: Message received from subprocess
+2024-05-22 13:12:11.622283 SUCCESS: Run
+2024-05-22 13:12:11.622283 SUCCESS
+
+2024-05-22 13:12:11.623255 {'algorithm': 'LSB_SOM', 'settings': {'k': 1}}, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\carrier_test\sample1.png, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\secret_test\sample1.txt
+2024-05-22 13:12:11.888370 SUCCESS: Setup
+2024-05-22 13:12:16.885405 SUCCESS: Message received from subprocess
+2024-05-22 13:12:16.886404 SUCCESS: Run
+2024-05-22 13:12:16.886907 SUCCESS
+
+2024-05-22 13:12:16.887934 {'algorithm': 'n_RMBR', 'settings': {'n': 4, 'color': 'RGB', 'end_msg': '$t3g0'}}, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\carrier_test\sample1.png, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\secret_test\sample1.txt
+2024-05-22 13:12:17.186747 SUCCESS: Setup
+2024-05-22 13:12:22.152004 SUCCESS: Message received from subprocess
+2024-05-22 13:12:22.153005 SUCCESS: Run
+2024-05-22 13:12:22.153005 SUCCESS
+
+2024-05-22 13:12:22.154005 {'algorithm': 'PVD_8D', 'settings': {'type': 1, 'color': 'RGB', 'end_msg': '$t3g0'}}, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\carrier_test\sample1.png, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\secret_test\sample1.txt
+2024-05-22 13:12:22.369742 SUCCESS: Setup
+2024-05-22 13:12:28.169941 WARNING: Timeout in subprocess
+2024-05-22 13:12:28.170897 SUCCESS: Run
+2024-05-22 13:12:28.170897 SUCCESS
+
+2024-05-22 13:12:28.171873 {'algorithm': 'PVDMF', 'settings': {'type': 1, 'end_msg': 'RGB', 'color': ''}}, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\carrier_test\sample1.png, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\secret_test\sample1.txt
+2024-05-22 13:12:28.458810 SUCCESS: Setup
+2024-05-22 13:12:34.199924 WARNING: Timeout in subprocess
+2024-05-22 13:12:34.199924 SUCCESS: Run
+2024-05-22 13:12:34.200925 SUCCESS
+
+2024-05-22 13:12:34.200925 {'algorithm': 'QVD_8D', 'settings': {'type': 3, 'end_msg': '$t3g0', 'color': 'RGB', 'k': 4}}, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\carrier_test\sample1.png, D:\Dominik\Desktop\Studia\Magisterka\Master-thesis-steganography\Master-thesis-steganography\samples\secret_test\sample1.txt
+2024-05-22 13:12:34.406802 SUCCESS: Setup
+2024-05-22 13:12:40.150359 WARNING: Timeout in subprocess
+2024-05-22 13:12:40.151360 SUCCESS: Run
+2024-05-22 13:12:40.151360 SUCCESS
+
+2024-05-22 13:12:40.178424 ERROR: Binning, Bin labels must be one fewer than the number of bin edges

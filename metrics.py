@@ -3,13 +3,17 @@ import numpy as np
 from skimage.metrics import structural_similarity as ssim
 import matplotlib.pyplot as plt
 import os
+import datetime
 import pandas as pd
 from pathlib import Path
 from multiprocessing import Process, Pipe
 from Levenshtein import ratio
 
 class metrics_calculator:
-    def __init__(self, log_file):
+    def __init__(self, log_file, destroyed_image_path, result_file_path, result_ranked_file_path):
+        self.destroyed_image_path = destroyed_image_path
+        self.result_file_path = result_file_path
+        self.result_ranked_file_path = result_ranked_file_path
         self.log_file = log_file
         self.sample_array = []
         self.stego_array = []
@@ -20,10 +24,9 @@ class metrics_calculator:
         self.algorithm = ""
         self.sample_image_path = ""
         self.sample_message_path = ""
-        self.destroyed_image_path = "tmp/damaged_stego.png"
-        self.result_file = open("results.txt", "w")
+        self.result_file = open(self.result_file_path, "w")
         self.result_file.write("Name;ET;DT;MSE;PSNR;QI;SSIM;AEC;BPB;ABCPB;DM\n")
-        Path("tmp").mkdir(parents=True, exist_ok=True)
+
         
     
     def setup(self, algorithm, sample_image_path, sample_message_path):
@@ -47,8 +50,8 @@ class metrics_calculator:
         if stego.mode == 'RGBA':
             self.stego_array = np.delete(self.stego_array, 3, 1)
 
-        self.log_file.write(f"SUCCESS: Setup\n")
-        print(f"SUCCESS: Setup")
+        self.log_file.write(f"{datetime.datetime.now()} SUCCESS: Setup\n")
+        print(f"{datetime.datetime.now()} SUCCESS: Setup")
 
 
     def run(self):
@@ -69,14 +72,14 @@ class metrics_calculator:
         DM = self.__calculate_destroyed_message__()
 
         self.result_file.write(f"{Name};{ET};{DT};{MSE};{PSNR};{QI};{SSIM};{AEC};{BPB};{ABCPB};{DM}\n")
-        self.log_file.write(f"SUCCESS: Run\n")
-        print(f"SUCCESS: Run")
+        self.log_file.write(f"{datetime.datetime.now()} SUCCESS: Run\n")
+        print(f"{datetime.datetime.now()} SUCCESS: Run")
 
 
     def binning(self):
         self.result_file.close()
         results_list = []
-        results_file = open("results.txt", "r")
+        results_file = open(self.result_file_path, "r")
         labels = results_file.readline()[:-1]
         for line in results_file:
             results_list.append(line)
@@ -95,7 +98,7 @@ class metrics_calculator:
                 continue
             df[f"{column_name}"] = pd.qcut(df[column_name], q=10, labels=range(1, 11), duplicates="drop")
 
-        df.to_csv("results_ranked.txt", sep=";", index=False)
+        df.to_csv(self.result_ranked_file_path, sep=";", index=False)
 
 
     def __MSE__(self):
@@ -217,27 +220,27 @@ class metrics_calculator:
             p_decode.join(timeout=5)
         except:
             p_decode.terminate()
-            self.log_file.write(f"ERROR: Something went wrong in subprocess\n")
-            print(f"ERROR: Something went wrong in subprocess")
+            self.log_file.write(f"{datetime.datetime.now()} ERROR: Something went wrong in subprocess\n")
+            print(f"{datetime.datetime.now()} ERROR: Something went wrong in subprocess")
             return 0
         
         if p_decode.exitcode == None:
             p_decode.terminate()
             p_decode.join()
-            self.log_file.write(f"WARNING: Timeout in subprocess\n")
-            print(f"WARNING: Timeout in subprocess")
+            self.log_file.write(f"{datetime.datetime.now()} WARNING: Timeout in subprocess\n")
+            print(f"{datetime.datetime.now()} WARNING: Timeout in subprocess")
             return 0
         
         try:
             child_pipe.close()
             decoded_msg = main_pipe.recv()
-            self.log_file.write(f"SUCCESS: Message received from subprocess\n")
-            print(f"SUCCESS: Message received from subprocess")
+            self.log_file.write(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess\n")
+            print(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess")
             difference = ratio(orignal_message, decoded_msg)
             return difference
         except:
-            self.log_file.write(f"WARNING: No message from subprocess\n")
-            print(f"WARINGIN: No message from subprocess")
+            self.log_file.write(f"{datetime.datetime.now()} WARNING: No message from subprocess\n")
+            print(f"{datetime.datetime.now()} WARINGIN: No message from subprocess")
             return 0
 
         

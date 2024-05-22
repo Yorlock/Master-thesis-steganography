@@ -8,7 +8,7 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class BPCS(steganographyAlgorithm):
-    def __init__(self, alpha=0.45, save_metadata=True):
+    def __init__(self, alpha=0.45, save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.algorithm_path_dir = util.get_algorithm_path_dir(self)

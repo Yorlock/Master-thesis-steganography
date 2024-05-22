@@ -9,7 +9,8 @@ from multiprocessing import Process, Pipe
 from Levenshtein import ratio
 
 class metrics_calculator:
-    def __init__(self):
+    def __init__(self, log_file):
+        self.log_file = log_file
         self.sample_array = []
         self.stego_array = []
         self.stego_width = 0
@@ -17,6 +18,8 @@ class metrics_calculator:
         self.stego_mode = ""
         self.hidden_message = ""
         self.algorithm = ""
+        self.sample_image_path = ""
+        self.sample_message_path = ""
         self.destroyed_image_path = "tmp/damaged_stego.png"
         self.result_file = open("results.txt", "w")
         self.result_file.write("Name;ET;DT;MSE;PSNR;QI;SSIM;AEC;BPB;ABCPB;DM\n")
@@ -25,6 +28,8 @@ class metrics_calculator:
     
     def setup(self, algorithm, sample_image_path, sample_message_path):
         self.algorithm = algorithm
+        self.sample_image_path = sample_image_path
+        self.sample_message_path = sample_message_path
         sample = Image.open(sample_image_path, 'r')
         self.sample_array = np.array(list(sample.getdata()))
         self.sample_mode = sample.mode
@@ -41,6 +46,9 @@ class metrics_calculator:
         self.stego_mode = stego.mode
         if stego.mode == 'RGBA':
             self.stego_array = np.delete(self.stego_array, 3, 1)
+
+        self.log_file.write(f"SUCCESS: Setup\n")
+        print(f"SUCCESS: Setup")
 
 
     def run(self):
@@ -61,6 +69,8 @@ class metrics_calculator:
         DM = self.__calculate_destroyed_message__()
 
         self.result_file.write(f"{Name};{ET};{DT};{MSE};{PSNR};{QI};{SSIM};{AEC};{BPB};{ABCPB};{DM}\n")
+        self.log_file.write(f"SUCCESS: Run\n")
+        print(f"SUCCESS: Run")
 
 
     def binning(self):
@@ -116,7 +126,7 @@ class metrics_calculator:
     def __SSIM__(self):
         sample = self.sample_array.flatten()
         stego = self.stego_array.flatten()
-        ssim_score = ssim(sample, stego)
+        ssim_score = ssim(sample, stego, data_range = 255)
         return ssim_score
 
 
@@ -200,7 +210,6 @@ class metrics_calculator:
         self.__destroy_image__()
         self.algorithm.stego_img_path = self.destroyed_image_path
         orignal_message = self.hidden_message
-        
         main_pipe, child_pipe = Pipe()
         p_decode = Process(target=self.algorithm.decode, args=(child_pipe, False,))
         try:       
@@ -208,16 +217,27 @@ class metrics_calculator:
             p_decode.join(timeout=5)
         except:
             p_decode.terminate()
-            print(f"{self.algorithm.json_content}: Błąd w podprocesie")
+            self.log_file.write(f"ERROR: Something went wrong in subprocess\n")
+            print(f"ERROR: Something went wrong in subprocess")
             return 0
         
         if p_decode.exitcode == None:
             p_decode.terminate()
             p_decode.join()
-            print(f"{self.algorithm.json_content}: Timeout")
+            self.log_file.write(f"WARNING: Timeout in subprocess\n")
+            print(f"WARNING: Timeout in subprocess")
             return 0
         
-        decoded_msg = main_pipe.recv()
-        print(f"{self.algorithm.json_content}: Wiadomość otrzymana")
-        difference = ratio(orignal_message, decoded_msg)
-        return difference
+        try:
+            child_pipe.close()
+            decoded_msg = main_pipe.recv()
+            self.log_file.write(f"SUCCESS: Message received from subprocess\n")
+            print(f"SUCCESS: Message received from subprocess")
+            difference = ratio(orignal_message, decoded_msg)
+            return difference
+        except:
+            self.log_file.write(f"WARNING: No message from subprocess\n")
+            print(f"WARINGIN: No message from subprocess")
+            return 0
+
+        

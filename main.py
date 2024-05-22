@@ -53,11 +53,11 @@ def example3():
             util.check_error(algorithm)
 
 def master_test():
-    log_file = open("log.txt", "w")
     algorithms_list = []
+    
     algorithms_list.append([BF()])
     algorithms_list.append([BPCS()])
-    #algorithms_list.append([chain_LSB()])
+    algorithms_list.append([chain_LSB()])
     algorithms_list.append([LSB_EOM()])
     algorithms_list.append([LSB_PF()])
     algorithms_list.append([LSB_SINE()])
@@ -67,27 +67,42 @@ def master_test():
     algorithms_list.append([PVDMF()])
     algorithms_list.append([QVD_8D()])
 
-    metrics_calculator = metrics.metrics_calculator()
+    log_file = open("log.txt", "w")
+    metrics_calculator = metrics.metrics_calculator(log_file)
     for algorithms in algorithms_list:
         for algorithm in algorithms:
             for i in range(1,2):
+                log_file.write(f"{algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}\n")
+                print(f"{algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}")
                 try:
                     algorithm.encode(util.get_carrier_test_color(i), util.get_secret_test_msg(i))
                     algorithm.decode(pipe=None)
 
                     if not filecmp.cmp(util.get_secret_test_msg(i), algorithm.destination_path):
-                        log_file.write(f"WARNING: {algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}, Decoded message is different from the original one\n")
-                        print(f"{algorithm.json_content}, i={i}: Decoded message is different from the original one")
+                        log_file.write(f"ERROR: decoded message is different from the original one\n")
+                        print(f"ERROR: Decoded message is different from the original one")
                     else:
                         metrics_calculator.setup(algorithm, util.get_carrier_test_color(i), util.get_secret_test_msg(i))
                         metrics_calculator.run()
-                        log_file.write(f"SUCCESS: {algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}\n")
+                        log_file.write(f"SUCCESS\n")
+                        print(f"SUCCESS\n")
                 
-                except:
-                    log_file.write(f"ERROR: {algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}\n")
-                    print(f"{algorithm.json_content}: Something went wrong")
+                except Exception as e:
+                    log_file.write(f"ERROR: {e}\n")
+                    print(f"ERROR: {e}")
+                
+                log_file.write("\n")
+                print("")
+    
+    try:
+        metrics_calculator.binning()
+        log_file.write(f"SUCCESS: Binning\n")
+        print(f"SUCCESS: Binning")
+    except Exception as e:
+        log_file.write(f"ERROR: Binning\n")
+        print(f"ERROR: Binning")
+
     log_file.close()
-    #metrics_calculator.binning()
 
 if __name__ == '__main__':
     util.init_instance()

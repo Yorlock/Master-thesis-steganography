@@ -61,8 +61,9 @@ def master_test():
     result_ranked_file_path = "tmp/results_ranked.txt"
     log_file_path = "tmp/log.txt"
 
+    sets_img_msg = [(i, j) for i in range(1, 11) for j in range(1, 6)]
+
     algorithms_list = []
-    
     algorithms_list.append([BF()])
     algorithms_list.append([BPCS()])
     algorithms_list.append([chain_LSB()])
@@ -79,18 +80,21 @@ def master_test():
     metrics_calculator = metrics.metrics_calculator(log_file, destroyed_image_path, result_file_path, result_ranked_file_path)
     for algorithms in algorithms_list:
         for algorithm in algorithms:
-            for i in range(1,2):
-                log_file.write(f"{datetime.datetime.now()} {algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}\n")
-                print(f"{datetime.datetime.now()} {algorithm.json_content}, {util.get_carrier_test_color(i)}, {util.get_secret_test_msg(i)}")
+            for i, j in sets_img_msg:
+                img_path = util.get_carrier_test_color(i)
+                msg_path = util.get_secret_test_msg(j)
+
+                log_file.write(f"{datetime.datetime.now()} {algorithm.json_content}, {img_path}, {msg_path}\n")
+                print(f"{datetime.datetime.now()} {algorithm.json_content}, {img_path}, {msg_path}")
                 try:
-                    algorithm.encode(util.get_carrier_test_color(i), util.get_secret_test_msg(i))
+                    algorithm.encode(img_path, msg_path)
                     algorithm.decode(pipe=None)
 
-                    if not filecmp.cmp(util.get_secret_test_msg(i), algorithm.destination_path):
+                    if not filecmp.cmp(msg_path, algorithm.destination_path):
                         log_file.write(f"{datetime.datetime.now()} ERROR: decoded message is different from the original one\n")
                         print(f"{datetime.datetime.now()} ERROR: Decoded message is different from the original one")
                     else:
-                        metrics_calculator.setup(algorithm, util.get_carrier_test_color(i), util.get_secret_test_msg(i))
+                        metrics_calculator.setup(algorithm, img_path, msg_path)
                         metrics_calculator.run()
                         log_file.write(f"{datetime.datetime.now()} SUCCESS\n")
                         print(f"{datetime.datetime.now()} SUCCESS\n")

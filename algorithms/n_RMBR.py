@@ -7,9 +7,7 @@ from time import time
 from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
-# the type parameter allows you to change the capacity of the hidden bits when QVD is used
-# color parameter allows you to specify which color should be used (default is all)
-# k parameter allows you to specify how many bits should be hidden in one byte when LSB is used
+
 class n_RMBR(steganographyAlgorithm):
     def __init__(self, end_msg="$t3g0", color="", n=4):
         self.msg_extension = ".txt"

@@ -24,6 +24,7 @@ class metrics_calculator:
         self.algorithm = ""
         self.sample_image_path = ""
         self.sample_message_path = ""
+        self.seed = np.random.randint(1, 1000)
         self.result_file = open(self.result_file_path, "w")
         self.result_file.write("Name;ET;DT;MSE;PSNR;QI;SSIM;AEC;BPB;ABCPB;DM\n")
 
@@ -151,8 +152,8 @@ class metrics_calculator:
         fig.savefig("stego_histogram.png")
 
 
-    def __destroy_image__(self, n=10, rows=[], columns=[], seed=0):
-        np.random.seed(seed)
+    def __destroy_image__(self, n=10, rows=[], columns=[]):
+        np.random.seed(self.seed)
         rows = np.unique(rows)
         if len(rows) > n:
             rows = rows[:n]
@@ -240,7 +241,7 @@ class metrics_calculator:
             return difference
         except:
             self.log_file.write(f"{datetime.datetime.now()} WARNING: No message from subprocess\n")
-            print(f"{datetime.datetime.now()} WARINGIN: No message from subprocess")
+            print(f"{datetime.datetime.now()} WARNING: No message from subprocess")
             return 0
 
         

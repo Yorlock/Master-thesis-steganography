@@ -8,7 +8,7 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class PVDMF(steganographyAlgorithm):
-    def __init__(self, end_msg="$t3g0", type=1, color="", estimation=True):
+    def __init__(self, end_msg="$t3g0", type=1, color="", estimation=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False

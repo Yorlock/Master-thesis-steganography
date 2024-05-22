@@ -10,7 +10,7 @@ import util
 # the type parameter allows you to change the capacity of the hidden bits when QVD is used
 # k parameter allows you to specify how many bits should be hidden in one byte when LSB is used
 class QVD_8D(steganographyAlgorithm):
-    def __init__(self, end_msg="$t3g0", color="", type=3, k=4, estimation=True):
+    def __init__(self, end_msg="$t3g0", color="", type=3, k=4, estimation=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False

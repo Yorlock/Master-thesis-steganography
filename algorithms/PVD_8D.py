@@ -9,7 +9,7 @@ import util
 
 #Type 1 possesses higher PSNR and type 2 possesses higher hiding capacity
 class PVD_8D(steganographyAlgorithm):
-    def __init__(self, end_msg="$t3g0", color="", type=1, estimation = True):
+    def __init__(self, end_msg="$t3g0", color="", type=1, estimation = False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.is_success = False

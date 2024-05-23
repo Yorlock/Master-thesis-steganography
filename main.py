@@ -88,7 +88,11 @@ def master_test():
                 print(f"{datetime.datetime.now()} {algorithm.json_content}, {img_path}, {msg_path}")
                 try:
                     algorithm.encode(img_path, msg_path)
+                    log_file.write(f"{datetime.datetime.now()} FINISHED: Encode\n")
+                    print(f"{datetime.datetime.now()} FINISHED: Encode")
                     algorithm.decode(pipe=None)
+                    log_file.write(f"{datetime.datetime.now()} FINISHED: Decode\n")
+                    print(f"{datetime.datetime.now()} FINISHED: Decode")
 
                     if not filecmp.cmp(msg_path, algorithm.destination_path):
                         log_file.write(f"{datetime.datetime.now()} ERROR: decoded message is different from the original one\n")
@@ -97,7 +101,7 @@ def master_test():
                         metrics_calculator.setup(algorithm, img_path, msg_path)
                         metrics_calculator.run()
                         log_file.write(f"{datetime.datetime.now()} SUCCESS\n")
-                        print(f"{datetime.datetime.now()} SUCCESS\n")
+                        print(f"{datetime.datetime.now()} SUCCESS")
                 
                 except Exception as e:
                     log_file.write(f"{datetime.datetime.now()} ERROR: {e}\n")
@@ -119,6 +123,6 @@ def master_test():
 if __name__ == '__main__':
     util.init_instance()
     util.clean_result()
-    #util.clean_all()
+    util.clean_all()
 
-    master_test()
+    #master_test()

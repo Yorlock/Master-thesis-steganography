@@ -218,7 +218,7 @@ class metrics_calculator:
         p_decode = Process(target=self.algorithm.decode, args=(child_pipe, False,))
         try:       
             p_decode.start()
-            p_decode.join(timeout=5)
+            p_decode.join(timeout=300)
         except:
             p_decode.terminate()
             self.log_file.write(f"{datetime.datetime.now()} ERROR: Something went wrong in subprocess\n")

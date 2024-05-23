@@ -18,6 +18,7 @@ class LSB_SOM(steganographyAlgorithm):
             self.k = 7
             self.error_msg += "The value of parameter k has been changed to 7."
         
+        self.timeout = 10
         self.json_content = {"algorithm":"LSB_SOM", "settings": {"k":self.k}}
 
     @property

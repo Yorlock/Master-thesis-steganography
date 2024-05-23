@@ -30,6 +30,7 @@ class n_RMBR(steganographyAlgorithm):
         if json_color == "":
             json_color = "RGB"
 
+        self.timeout = 10
         self.json_content = {"algorithm":"n_RMBR", "settings": {"n":self.n, "color":json_color ,"end_msg":self.end_msg}}
 
     @property

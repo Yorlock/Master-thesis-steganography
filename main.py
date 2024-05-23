@@ -13,23 +13,29 @@ from pathlib import Path
 import datetime
 import util
 import metrics
-import json
 import filecmp
 
 # define object and run it  in the provided sample
 def example1():
-    lsb = BF(type=1, color="", save_metadata=True)
-    lsb.encode(util.get_carrier_color(1), util.get_secret_msg(0))
+    Path("tmp").mkdir(parents=True, exist_ok=True)
+    destroyed_image_path = "tmp/damaged_stego.png"
+    result_file_path = "tmp/results.txt"
+    result_ranked_file_path = "tmp/results_ranked.txt"
+    log_file_path = "tmp/log.txt"
+    img_path = util.get_carrier_test_color(10)
+    msg_path = util.get_secret_test_msg(5)
+
+    lsb = BF(type=1, color="")
+    lsb.encode(img_path, msg_path)
     util.check_error(lsb)
     lsb.decode()
     util.check_error(lsb)
 
-    f = open(lsb.metadata_path, "r")
-    data = json.load(f)
-    f.close()
-    print(data['milli_sec_elapsed_encode'])
-    print(data['settings']['type'])
-    print(data['settings'])
+    log_file = open(log_file_path, "w")
+    metrics_calculator = metrics.metrics_calculator(log_file, destroyed_image_path, result_file_path, result_ranked_file_path)
+
+    metrics_calculator.setup(lsb, img_path, msg_path)
+    metrics_calculator.run()
 
 # define multiple objects and run them in the provided sample
 def example2():
@@ -61,7 +67,7 @@ def master_test():
     result_ranked_file_path = "tmp/results_ranked.txt"
     log_file_path = "tmp/log.txt"
 
-    sets_img_msg = [(i, j) for i in range(1, 11) for j in range(1, 6)]       #i:1-11      j:1-6
+    sets_img_msg = [(i, j) for i in range(1, 11) for j in range(1, 6)]
 
     algorithms_list = []
     algorithms_list.append([BF(type=1, color=""), BF(type=2, color=""),BF(type=1, color="R"), BF(type=2, color="R"), BF(type=1, color="G"), BF(type=2, color="G"), BF(type=1, color="B"), BF(type=2, color="B")])
@@ -84,8 +90,8 @@ def master_test():
                 img_path = util.get_carrier_test_color(i)
                 msg_path = util.get_secret_test_msg(j)
 
-                log_file.write(f"{datetime.datetime.now()} {algorithm.json_content}, {img_path}, {msg_path}\n")
-                print(f"{datetime.datetime.now()} {algorithm.json_content}, {img_path}, {msg_path}")
+                log_file.write(f"{datetime.datetime.now()} {algorithm.json_content['algorithm']}, {algorithm.json_content['settings']}, {Path(img_path).name}, {Path(msg_path).name}\n")
+                print(f"{datetime.datetime.now()} {algorithm.json_content['algorithm']}, {algorithm.json_content['settings']}, {Path(img_path).name}, {Path(msg_path).name}")
                 try:
                     algorithm.encode(img_path, msg_path)
                     log_file.write(f"{datetime.datetime.now()} FINISHED: Encode\n")
@@ -123,6 +129,6 @@ def master_test():
 if __name__ == '__main__':
     util.init_instance()
     util.clean_result()
-    util.clean_all()
+    #util.clean_all()
 
-    #master_test()
+    master_test()

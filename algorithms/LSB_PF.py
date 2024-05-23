@@ -27,6 +27,7 @@ class LSB_PF(steganographyAlgorithm):
         if json_color == "":
             json_color = "RGB"
 
+        self.timeout = 10
         self.json_content = {"algorithm":"LSB_PF", "settings": {"password":self.password, "color":json_color, "end_msg":self.end_msg}}
 
     @property

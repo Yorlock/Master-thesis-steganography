@@ -46,6 +46,7 @@ class QVD_8D(steganographyAlgorithm):
         if json_color == "":
             json_color = "RGB"
 
+        self.timeout = 10
         self.json_content = {"algorithm":"QVD_8D", "settings": {"type":self.type ,"end_msg":self.end_msg, "color":json_color, "k":self.k}}
 
     @property

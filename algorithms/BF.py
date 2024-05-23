@@ -25,6 +25,7 @@ class BF(steganographyAlgorithm):
         else:
             self.color = ""
         
+        self.timeout = 10
         json_color = self.color
         if json_color == "":
             json_color = "RGB"
@@ -201,9 +202,9 @@ class BF(steganographyAlgorithm):
             destination_file = open(self.destination_path, "w")
             destination_file.write(message)
             destination_file.close()
-            
+
         if pipe is not None:
-            pipe.send(message)
+            pipe.put(message)
             pipe.close()
 
         self.is_success = True  

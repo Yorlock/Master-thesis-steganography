@@ -46,6 +46,7 @@ class PVD_8D(steganographyAlgorithm):
         if json_color == "":
             json_color = "RGB"
 
+        self.timeout = 10
         self.json_content = {"algorithm":"PVD_8D", "settings": {"type":self.type, "color":json_color, "end_msg":self.end_msg}}
 
     @property

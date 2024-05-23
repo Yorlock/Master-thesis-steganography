@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 import os
 import datetime
 import pandas as pd
-from pathlib import Path
-from multiprocessing import Process, Pipe
+from multiprocessing import Process, SimpleQueue
 from Levenshtein import ratio
 
 class metrics_calculator:
@@ -24,7 +23,8 @@ class metrics_calculator:
         self.algorithm = ""
         self.sample_image_path = ""
         self.sample_message_path = ""
-        self.seed = np.random.randint(1, 1000)
+        self.timeout = 10
+        self.seed = 23 #np.random.randint(1, 1000)
         self.result_file = open(self.result_file_path, "w")
         self.result_file.write("Name;ET;DT;MSE;PSNR;QI;SSIM;AEC;BPB;ABCPB;DM\n")
 
@@ -40,6 +40,7 @@ class metrics_calculator:
         if sample.mode == 'RGBA':
             self.sample_array = np.delete(self.sample_array, 3, 1)
 
+        self.timeout = self.algorithm.timeout
         stego = Image.open(os.path.join(self.algorithm.algorithm_path_dir, "stego.png"), 'r')
         msg_file = open(sample_message_path,'r')
         self.hidden_message = msg_file.read()
@@ -214,11 +215,11 @@ class metrics_calculator:
         self.__destroy_image__()
         self.algorithm.stego_img_path = self.destroyed_image_path
         orignal_message = self.hidden_message
-        main_pipe, child_pipe = Pipe()
-        p_decode = Process(target=self.algorithm.decode, args=(child_pipe, False,))
+        queue = SimpleQueue()
+        p_decode = Process(target=self.algorithm.decode, args=(queue, False,))        
         try:       
             p_decode.start()
-            p_decode.join(timeout=90)
+            p_decode.join(timeout=self.timeout)
         except:
             p_decode.terminate()
             self.log_file.write(f"{datetime.datetime.now()} ERROR: Something went wrong in subprocess\n")
@@ -226,15 +227,26 @@ class metrics_calculator:
             return 0
         
         if p_decode.exitcode == None:
-            p_decode.terminate()
-            p_decode.join()
-            self.log_file.write(f"{datetime.datetime.now()} WARNING: Timeout in subprocess\n")
-            print(f"{datetime.datetime.now()} WARNING: Timeout in subprocess")
-            return 0
+            try:
+                decoded_msg = queue.get(1)
+                p_decode.terminate()
+                p_decode.join()
+                if decoded_msg != None or decoded_msg != "":
+                    difference = ratio(orignal_message, decoded_msg)
+                    self.log_file.write(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess\n")
+                    print(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess")
+                    return difference
+
+                self.log_file.write(f"{datetime.datetime.now()} WARNING: Timeout in subprocess\n")
+                print(f"{datetime.datetime.now()} WARNING: Timeout in subprocess")
+                return 0
+            except:
+                self.log_file.write(f"{datetime.datetime.now()} WARNING: Timeout in subprocess\n")
+                print(f"{datetime.datetime.now()} WARNING: Timeout in subprocess")
+                return 0
         
         try:
-            child_pipe.close()
-            decoded_msg = main_pipe.recv()
+            decoded_msg = queue.get(1)
             self.log_file.write(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess\n")
             print(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess")
             difference = ratio(orignal_message, decoded_msg)

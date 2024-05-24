@@ -14,7 +14,7 @@ class chain_LSB(steganographyAlgorithm):
         self.k = k
         self.error_msg = ""
         self.end_msg = end_msg
-        self.timeout = 10
+        self.timeout = 15
         self.json_content = {"algorithm":"chain_LSB", "settings": {"k":self.k, "end_msg":self.end_msg}}
 
     @property
@@ -222,7 +222,7 @@ class chain_LSB(steganographyAlgorithm):
             destination_file.close()
 
         if pipe is not None:
-            pipe.send(message)
+            pipe.put(message)
             pipe.close()
 
         self.is_success = True

@@ -33,7 +33,7 @@ class LSB_SINE(steganographyAlgorithm):
         else:
             self.sine_phase = sine_phase
         
-        self.timeout = 10
+        self.timeout = 15
         self.save_metadata = save_metadata        
         self.json_content = {"algorithm":"LSB_SINE", "settings": {"round_accuracy":self.round_accuracy, "sine_phase":self.sine_phase ,"end_msg":self.end_msg}}
 
@@ -260,7 +260,7 @@ class LSB_SINE(steganographyAlgorithm):
             destination_file.close()
 
         if pipe is not None:
-            pipe.send(message)
+            pipe.put(message)
             pipe.close()
 
         self.is_success = True

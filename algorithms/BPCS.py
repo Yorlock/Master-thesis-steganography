@@ -133,7 +133,7 @@ class BPCS(steganographyAlgorithm):
             json.dump(self.json_content, f)
 
         if pipe is not None:
-            pipe.send(message)
+            pipe.put(message)
             pipe.close()
             
         self.is_success = True

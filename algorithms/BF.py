@@ -25,7 +25,7 @@ class BF(steganographyAlgorithm):
         else:
             self.color = ""
         
-        self.timeout = 10
+        self.timeout = 15
         json_color = self.color
         if json_color == "":
             json_color = "RGB"

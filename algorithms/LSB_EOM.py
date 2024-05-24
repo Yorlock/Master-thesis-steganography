@@ -209,7 +209,7 @@ class LSB_EOM(steganographyAlgorithm):
         self.is_success = True
 
         if pipe is not None:
-            pipe.send(message)
+            pipe.put(message)
             pipe.close()
 
         return message

@@ -34,7 +34,7 @@ class PVDMF(steganographyAlgorithm):
         if json_color == "":
             json_color = "RGB"
         
-        self.timeout = 10
+        self.timeout = 15
         self.json_content = {"algorithm":"PVDMF", "settings": {"type":self.type ,"end_msg":self.end_msg, "color":self.color}}
 
     @property
@@ -245,7 +245,7 @@ class PVDMF(steganographyAlgorithm):
             destination_file.close()
         
         if pipe is not None:
-            pipe.send(message)
+            pipe.put(message)
             pipe.close()
 
         self.is_success = True

@@ -186,7 +186,7 @@ class LSB_SOM(steganographyAlgorithm):
             destination_file.close()
 
         if pipe is not None:
-            pipe.send(message)
+            pipe.put(message)
             pipe.close()
             
         self.is_success = True

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 import datetime
 import pandas as pd
-from multiprocessing import Process, SimpleQueue
+from multiprocessing import Process, Queue
 from Levenshtein import ratio
 
 class metrics_calculator:
@@ -215,7 +215,7 @@ class metrics_calculator:
         self.__destroy_image__()
         self.algorithm.stego_img_path = self.destroyed_image_path
         orignal_message = self.hidden_message
-        queue = SimpleQueue()
+        queue = Queue()
         p_decode = Process(target=self.algorithm.decode, args=(queue, False,))        
         try:       
             p_decode.start()

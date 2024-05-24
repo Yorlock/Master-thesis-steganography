@@ -228,7 +228,9 @@ class metrics_calculator:
         
         if p_decode.exitcode == None:
             try:
-                decoded_msg = queue.get(1)
+                if not queue.empty():
+                    decoded_msg = queue.get(1)
+
                 p_decode.terminate()
                 p_decode.join()
                 if decoded_msg != None or decoded_msg != "":
@@ -246,7 +248,9 @@ class metrics_calculator:
                 return 0
         
         try:
-            decoded_msg = queue.get(1)
+            if not queue.empty():
+                decoded_msg = queue.get(1)
+
             self.log_file.write(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess\n")
             print(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess")
             difference = ratio(orignal_message, decoded_msg)

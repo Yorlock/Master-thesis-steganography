@@ -28,7 +28,6 @@ class metrics_calculator:
         self.result_file = open(self.result_file_path, "w")
         self.result_file.write("Name;ET;DT;MSE;PSNR;QI;SSIM;AEC;BPB;ABCPB;DM\n")
 
-        
     
     def setup(self, algorithm, sample_image_path, sample_message_path):
         self.algorithm = algorithm
@@ -98,6 +97,11 @@ class metrics_calculator:
         for column_name, column in df.items():
             if column_name == "Name":
                 continue
+
+            if column_name == "BPB" or column_name == "DM":
+                df[f"{column_name}"] = pd.cut(df[column_name], bins=10, labels=range(1, 11), duplicates="drop")
+                continue
+            
             df[f"{column_name}"] = pd.qcut(df[column_name], q=10, labels=range(1, 11), duplicates="drop")
 
         df.to_csv(self.result_ranked_file_path, sep=";", index=False)
@@ -230,15 +234,15 @@ class metrics_calculator:
             try:
                 if not queue.empty():
                     decoded_msg = queue.get(1)
-
-                p_decode.terminate()
-                p_decode.join()
-                if decoded_msg != None or decoded_msg != "":
+                    p_decode.terminate()
+                    p_decode.join()
                     difference = ratio(orignal_message, decoded_msg)
                     self.log_file.write(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess\n")
                     print(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess")
                     return difference
 
+                p_decode.terminate()
+                p_decode.join()
                 self.log_file.write(f"{datetime.datetime.now()} WARNING: Timeout in subprocess\n")
                 print(f"{datetime.datetime.now()} WARNING: Timeout in subprocess")
                 return 0
@@ -250,11 +254,14 @@ class metrics_calculator:
         try:
             if not queue.empty():
                 decoded_msg = queue.get(1)
-
-            self.log_file.write(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess\n")
-            print(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess")
-            difference = ratio(orignal_message, decoded_msg)
-            return difference
+                self.log_file.write(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess\n")
+                print(f"{datetime.datetime.now()} SUCCESS: Message received from subprocess")
+                difference = ratio(orignal_message, decoded_msg)
+                return difference
+            
+            self.log_file.write(f"{datetime.datetime.now()} WARNING: No message from subprocess\n")
+            print(f"{datetime.datetime.now()} WARNING: No message from subprocess")
+            return 0
         except:
             self.log_file.write(f"{datetime.datetime.now()} WARNING: No message from subprocess\n")
             print(f"{datetime.datetime.now()} WARNING: No message from subprocess")

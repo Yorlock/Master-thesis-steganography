@@ -94,9 +94,19 @@ def master_test():
                 print(f"{datetime.datetime.now()} {algorithm.json_content['algorithm']}, {algorithm.json_content['settings']}, {Path(img_path).name}, {Path(msg_path).name}")
                 try:
                     algorithm.encode(img_path, msg_path)
+                    if not algorithm.is_success:
+                        log_file.write(f"{datetime.datetime.now()} ERROR: Encode {algorithm.error_msg}\n")
+                        print(f"{datetime.datetime.now()} ERROR: Encode {algorithm.error_msg}")
+                        continue
+
                     log_file.write(f"{datetime.datetime.now()} FINISHED: Encode\n")
                     print(f"{datetime.datetime.now()} FINISHED: Encode")
                     algorithm.decode(pipe=None)
+                    if not algorithm.is_success:
+                        log_file.write(f"{datetime.datetime.now()} ERROR: Decode {algorithm.error_msg}\n")
+                        print(f"{datetime.datetime.now()} ERROR: Decode {algorithm.error_msg}")
+                        continue
+
                     log_file.write(f"{datetime.datetime.now()} FINISHED: Decode\n")
                     print(f"{datetime.datetime.now()} FINISHED: Decode")
 
@@ -106,8 +116,8 @@ def master_test():
                     else:
                         metrics_calculator.setup(algorithm, img_path, msg_path)
                         metrics_calculator.run()
-                        log_file.write(f"{datetime.datetime.now()} SUCCESS\n")
-                        print(f"{datetime.datetime.now()} SUCCESS")
+                        log_file.write(f"{datetime.datetime.now()} SUCCESS TEST\n")
+                        print(f"{datetime.datetime.now()} SUCCESS TEST")
                 
                 except Exception as e:
                     log_file.write(f"{datetime.datetime.now()} ERROR: {e}\n")
@@ -117,7 +127,7 @@ def master_test():
                 print("")
     
     try:
-        #metrics_calculator.binning()
+        metrics_calculator.binning()
         log_file.write(f"{datetime.datetime.now()} SUCCESS: Binning\n")
         print(f"{datetime.datetime.now()} SUCCESS: Binning")
     except Exception as e:
@@ -126,9 +136,27 @@ def master_test():
 
     log_file.close()
 
+def master_test_binning():
+    Path("tmp").mkdir(parents=True, exist_ok=True)
+    destroyed_image_path = "tmp/damaged_stego.png"
+    result_file_path = "tmp/results.txt"
+    result_ranked_file_path = "tmp/results_ranked.txt"
+    log_file_path = "tmp/log.txt"
+    log_file = open(log_file_path, "w")
+    metrics_calculator = metrics.metrics_calculator(log_file, destroyed_image_path, result_file_path, result_ranked_file_path)
+
+    try:
+        metrics_calculator.binning()
+        log_file.write(f"{datetime.datetime.now()} SUCCESS: Binning\n")
+        print(f"{datetime.datetime.now()} SUCCESS: Binning")
+    except Exception as e:
+        log_file.write(f"{datetime.datetime.now()} ERROR: Binning, {e}\n")
+        print(f"{datetime.datetime.now()} ERROR: Binning, {e}")
+
 if __name__ == '__main__':
     util.init_instance()
     util.clean_result()
     #util.clean_all()
 
     master_test()
+    #master_test_binning()

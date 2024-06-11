@@ -11,10 +11,6 @@ class LSB_SOM(steganographyAlgorithm):
     def __init__(self, k=1):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
-        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
-        self.stego_img_path = util.get_encode_path(self)
-        self.destination_path = util.get_decode_path(self)
-        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.k = k
         self.error_msg = ""
@@ -22,7 +18,8 @@ class LSB_SOM(steganographyAlgorithm):
             self.k = 7
             self.error_msg += "The value of parameter k has been changed to 7."
         
-        self.json_content = {"algorythm":"LSB_SOM", "settings": {"k":self.k}}
+        self.timeout = 10
+        self.json_content = {"algorithm":"LSB_SOM", "settings": {"k":self.k}}
 
     @property
     def is_success(self):
@@ -101,6 +98,11 @@ class LSB_SOM(steganographyAlgorithm):
         self.error_msg = ""
 
     def encode(self, img_path, msg_path):
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.metadata_path = util.get_metadata_path(self)
+        
         img = Image.open(img_path, 'r')
         width, height = img.size
         array = np.array(list(img.getdata()))
@@ -143,7 +145,7 @@ class LSB_SOM(steganographyAlgorithm):
         enc_img.save(self.stego_img_path)
         self.is_success = True
 
-    def decode(self):
+    def decode(self, pipe=None, save_to_txt=True):
         if not self.is_success:
             self.error_msg = "Encode failed"
             return
@@ -178,10 +180,17 @@ class LSB_SOM(steganographyAlgorithm):
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
-        destination_file = open(self.destination_path, "w")
-        destination_file.write(message)
-        destination_file.close()
+        if save_to_txt:
+            destination_file = open(self.destination_path, "w")
+            destination_file.write(message)
+            destination_file.close()
+
+        if pipe is not None:
+            pipe.put(message)
+            pipe.close()
+            
         self.is_success = True
+        return message
 
     def __hide_text__(self, total_pixels, req_bits, array, b_message):
         index = 0

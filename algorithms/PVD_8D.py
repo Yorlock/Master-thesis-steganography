@@ -9,13 +9,9 @@ import util
 
 #Type 1 possesses higher PSNR and type 2 possesses higher hiding capacity
 class PVD_8D(steganographyAlgorithm):
-    def __init__(self, end_msg="$t3g0", color="", type=1, estimation = True):
+    def __init__(self, end_msg="$t3g0", color="", type=1, estimation = False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
-        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
-        self.stego_img_path = util.get_encode_path(self)
-        self.destination_path = util.get_decode_path(self)
-        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.end_msg = end_msg
@@ -46,7 +42,12 @@ class PVD_8D(steganographyAlgorithm):
             self.t = 1
             self.type_capacity = np.array([1, 1, 1, 1, 1, 1])
         
-        self.json_content = {"algorythm":"PVD_8D", "settings": {"type":self.type, "color":self.color, "end_msg":self.end_msg}}
+        json_color = self.color
+        if json_color == "":
+            json_color = "RGB"
+
+        self.timeout = 15
+        self.json_content = {"algorithm":"PVD_8D", "settings": {"type":self.type, "color":json_color, "end_msg":self.end_msg}}
 
     @property
     def is_success(self):
@@ -125,6 +126,11 @@ class PVD_8D(steganographyAlgorithm):
         self.error_msg = ""
 
     def encode(self, img_path, msg_path):
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.metadata_path = util.get_metadata_path(self)
+        
         img = Image.open(img_path, 'r')
         width, height = img.size
         matrix = np.array(img)
@@ -161,7 +167,7 @@ class PVD_8D(steganographyAlgorithm):
         enc_img.save(self.stego_img_path)
         self.is_success = True
 
-    def decode(self):
+    def decode(self, pipe=None, save_to_txt=True):
         if not self.is_success:
             self.error_msg = "Encode failed"
             return
@@ -215,10 +221,19 @@ class PVD_8D(steganographyAlgorithm):
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
-        destination_file = open(self.destination_path, "w")
-        destination_file.write(message[:-len(self.end_msg)])
-        destination_file.close()
+        message = message[:-len(self.end_msg)]
+
+        if save_to_txt:
+            destination_file = open(self.destination_path, "w")
+            destination_file.write(message)
+            destination_file.close()
+        
+        if pipe is not None:
+            pipe.put(message)
+            pipe.close()
+        
         self.is_success = True
+        return message
 
     def __calculate_available_bits__(self, req_bits, matrix, cols, rows):
         available_bits = 0

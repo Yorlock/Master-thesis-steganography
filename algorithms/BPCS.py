@@ -8,18 +8,15 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class BPCS(steganographyAlgorithm):
-    def __init__(self, alpha=0.45, save_metadata=True):
+    def __init__(self, alpha=0.45, save_metadata=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
-        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
-        self.stego_img_path = util.get_encode_path(self)
-        self.destination_path = util.get_decode_path(self)
-        self.metadata_path = util.get_metadata_path(self)
         self.alpha = alpha
         self.is_success = False
         self.save_metadata = save_metadata
         self.error_msg = ""
-        self.json_content = {"algorythm":"BPCS", "settings": {"alpha":self.alpha}}
+        self.timeout = 45
+        self.json_content = {"algorithm":"BPCS", "settings": {"alpha":self.alpha}}
 
     @property
     def is_success(self):
@@ -98,6 +95,11 @@ class BPCS(steganographyAlgorithm):
         self.error_msg = ""
 
     def encode(self, img_path, msg_path):
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.metadata_path = util.get_metadata_path(self)
+    
         bitplatedir=''
         if self.save_metadata:
             bitplatedir = self.algorithm_path_dir
@@ -112,7 +114,7 @@ class BPCS(steganographyAlgorithm):
     
         self.is_success = True
 
-    def decode(self):
+    def decode(self, pipe=None, save_to_txt=True):
         if not self.is_success:
             self.error_msg = "Encode failed"
             return
@@ -121,7 +123,7 @@ class BPCS(steganographyAlgorithm):
             
         start_time = time()
 
-        bpcs.decode(self.stego_img_path, self.destination_path, self.alpha)
+        message = bpcs.decode(self.stego_img_path, self.destination_path, self.alpha, save_to_txt)
 
         end_time = time()
         milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
@@ -129,4 +131,10 @@ class BPCS(steganographyAlgorithm):
 
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
+
+        if pipe is not None:
+            pipe.put(message)
+            pipe.close()
+            
         self.is_success = True
+        return message

@@ -8,13 +8,9 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class PVDMF(steganographyAlgorithm):
-    def __init__(self, end_msg="$t3g0", type=1, color="", estimation=True):
+    def __init__(self, end_msg="$t3g0", type=1, color="", estimation=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
-        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
-        self.stego_img_path = util.get_encode_path(self)
-        self.destination_path = util.get_decode_path(self)
-        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.estimation = estimation
@@ -33,8 +29,13 @@ class PVDMF(steganographyAlgorithm):
             self.color = color
         else:
             self.color = ""
+
+        json_color = self.color
+        if json_color == "":
+            json_color = "RGB"
         
-        self.json_content = {"algorythm":"PVDMF", "settings": {"type":self.type ,"end_msg":self.end_msg, "color":self.color}}
+        self.timeout = 15
+        self.json_content = {"algorithm":"PVDMF", "settings": {"type":self.type ,"end_msg":self.end_msg, "color":self.color}}
 
     @property
     def is_success(self):
@@ -113,6 +114,11 @@ class PVDMF(steganographyAlgorithm):
         self.error_msg = ""
 
     def encode(self, img_path, msg_path):
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.metadata_path = util.get_metadata_path(self)
+        
         img = Image.open(img_path, 'r')
         width, height = img.size
         array = np.array(list(img.getdata()))
@@ -154,7 +160,7 @@ class PVDMF(steganographyAlgorithm):
         enc_img.save(self.stego_img_path)
         self.is_success = True
 
-    def decode(self):
+    def decode(self, pipe=None, save_to_txt=True):
         if not self.is_success:
             self.error_msg = "Encode failed"
             return
@@ -231,10 +237,19 @@ class PVDMF(steganographyAlgorithm):
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
-        destination_file = open(self.destination_path, "w")
-        destination_file.write(message[:-len(self.end_msg)])
-        destination_file.close()
+        message = message[:-len(self.end_msg)]
+
+        if save_to_txt:
+            destination_file = open(self.destination_path, "w")
+            destination_file.write(message)
+            destination_file.close()
+        
+        if pipe is not None:
+            pipe.put(message)
+            pipe.close()
+
         self.is_success = True
+        return message
 
     def __get_color_range__(self):
         if self.color == "":

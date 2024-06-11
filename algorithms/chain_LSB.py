@@ -10,15 +10,12 @@ class chain_LSB(steganographyAlgorithm):
     def __init__(self, k=0, end_msg="$t3g0"):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
-        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
-        self.stego_img_path = util.get_encode_path(self)
-        self.destination_path = util.get_decode_path(self)
-        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.k = k
         self.error_msg = ""
         self.end_msg = end_msg
-        self.json_content = {"algorythm":"chain_LSB", "settings": {"k":self.k, "end_msg":self.end_msg}}
+        self.timeout = 15
+        self.json_content = {"algorithm":"chain_LSB", "settings": {"k":self.k, "end_msg":self.end_msg}}
 
     @property
     def is_success(self):
@@ -97,6 +94,11 @@ class chain_LSB(steganographyAlgorithm):
         self.error_msg = ""
 
     def encode(self, img_path, msg_path):
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.metadata_path = util.get_metadata_path(self)
+    
         img = Image.open(img_path, 'r')
         width, height = img.size
         array = np.array(list(img.getdata()))
@@ -144,7 +146,7 @@ class chain_LSB(steganographyAlgorithm):
         enc_img.save(self.stego_img_path)
         self.is_success = True
 
-    def decode(self):
+    def decode(self, pipe=None, save_to_txt=True):
         if not self.is_success:
             self.error_msg = "Encode failed"
             return
@@ -209,13 +211,22 @@ class chain_LSB(steganographyAlgorithm):
         milli_sec_elapsed =  int(round((end_time - start_time) * 1000))
         self.json_content["milli_sec_elapsed_decode"] = milli_sec_elapsed
 
+        message = message[:-len(self.end_msg)]
+
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
-        destination_file = open(self.destination_path, "w")
-        destination_file.write(message[:-len(self.end_msg)])
-        destination_file.close()
+        if save_to_txt:
+            destination_file = open(self.destination_path, "w")
+            destination_file.write(message)
+            destination_file.close()
+
+        if pipe is not None:
+            pipe.put(message)
+            pipe.close()
+
         self.is_success = True
+        return message
 
     def __hide_text__(self, pointer_length, b_message, req_chunks, possible_chunks, array):
         messages_chunks = self.__split_string_into_substrings__(b_message, self.k)

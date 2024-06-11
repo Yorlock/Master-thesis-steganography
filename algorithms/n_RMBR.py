@@ -7,17 +7,11 @@ from time import time
 from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
-# the type parameter allows you to change the capacity of the hidden bits when QVD is used
-# color parameter allows you to specify which color should be used (default is all)
-# k parameter allows you to specify how many bits should be hidden in one byte when LSB is used
+
 class n_RMBR(steganographyAlgorithm):
     def __init__(self, end_msg="$t3g0", color="", n=4):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
-        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
-        self.stego_img_path = util.get_encode_path(self)
-        self.destination_path = util.get_decode_path(self)
-        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.end_msg = end_msg
@@ -32,7 +26,12 @@ class n_RMBR(steganographyAlgorithm):
         else:
             self.n = n
         
-        self.json_content = {"algorythm":"n_RMBR", "settings": {"n":self.n, "color":self.color ,"end_msg":self.end_msg}}
+        json_color = self.color
+        if json_color == "":
+            json_color = "RGB"
+
+        self.timeout = 15
+        self.json_content = {"algorithm":"n_RMBR", "settings": {"n":self.n, "color":json_color ,"end_msg":self.end_msg}}
 
     @property
     def is_success(self):
@@ -111,6 +110,11 @@ class n_RMBR(steganographyAlgorithm):
         self.error_msg = ""
 
     def encode(self, img_path, msg_path):
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.metadata_path = util.get_metadata_path(self)
+        
         img = Image.open(img_path, 'r')
         width, height = img.size
         array = np.array(list(img.getdata()))
@@ -151,7 +155,7 @@ class n_RMBR(steganographyAlgorithm):
         enc_img.save(self.stego_img_path)
         self.is_success = True
 
-    def decode(self):
+    def decode(self, pipe=None, save_to_txt=True):
         if not self.is_success:
             self.error_msg = "Encode failed"
             return
@@ -210,10 +214,19 @@ class n_RMBR(steganographyAlgorithm):
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
-        destination_file = open(self.destination_path, "w")
-        destination_file.write(message[:-len(self.end_msg)])
-        destination_file.close()
+        message = message[:-len(self.end_msg)]
+
+        if save_to_txt:
+            destination_file = open(self.destination_path, "w")
+            destination_file.write(message)
+            destination_file.close()
+
+        if pipe is not None:
+            pipe.put(message)
+            pipe.close()
+            
         self.is_success = True
+        return message
 
     def __get_color_range__(self):
         if self.color == "":

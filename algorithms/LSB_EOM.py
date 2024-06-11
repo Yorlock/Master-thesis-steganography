@@ -10,10 +10,6 @@ class LSB_EOM(steganographyAlgorithm):
     def __init__(self, k=1, end_msg="$t3g0"):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
-        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
-        self.stego_img_path = util.get_encode_path(self)
-        self.destination_path = util.get_decode_path(self)
-        self.metadata_path = util.get_metadata_path(self)
         self.is_success = False
         self.error_msg = ""
         self.k = k
@@ -22,7 +18,8 @@ class LSB_EOM(steganographyAlgorithm):
             self.k = 7
             self.error_msg += "The value of parameter k has been changed to 7."
         
-        self.json_content = {"algorythm":"LSB_EOM", "settings": {"k":self.k, "end_msg":self.end_msg}}
+        self.timeout = 10
+        self.json_content = {"algorithm":"LSB_EOM", "settings": {"k":self.k, "end_msg":self.end_msg}}
 
     @property
     def is_success(self):
@@ -101,6 +98,11 @@ class LSB_EOM(steganographyAlgorithm):
         self.error_msg = ""
 
     def encode(self, img_path, msg_path):
+        self.algorithm_path_dir = util.get_algorithm_path_dir(self)
+        self.stego_img_path = util.get_encode_path(self)
+        self.destination_path = util.get_decode_path(self)
+        self.metadata_path = util.get_metadata_path(self)
+        
         img = Image.open(img_path, 'r')
         width, height = img.size
         array = np.array(list(img.getdata()))
@@ -137,7 +139,7 @@ class LSB_EOM(steganographyAlgorithm):
         enc_img.save(self.stego_img_path)
         self.is_success = True
 
-    def decode(self):
+    def decode(self, pipe=None, save_to_txt=True):
         if not self.is_success:
             self.error_msg = "Encode failed"
             return
@@ -197,10 +199,20 @@ class LSB_EOM(steganographyAlgorithm):
         with open(self.metadata_path, "w") as f:
             json.dump(self.json_content, f)
 
-        destination_file = open(self.destination_path, "w")
-        destination_file.write(message[:-len(self.end_msg)])
-        destination_file.close()
+        message = message[:-len(self.end_msg)]
+
+        if save_to_txt:
+            destination_file = open(self.destination_path, "w")
+            destination_file.write(message)
+            destination_file.close()
+            
         self.is_success = True
+
+        if pipe is not None:
+            pipe.put(message)
+            pipe.close()
+
+        return message
 
     def __hide_text__(self, total_pixels, req_bits, array, b_message):
         index = 0
@@ -213,7 +225,7 @@ class LSB_EOM(steganographyAlgorithm):
                 value_old_bin = bin(value_old)[2:]
                 value_old_bin = '0' * (8 - len(value_old_bin)) + value_old_bin
                 b_message_bit = b_message[index:index+self.k]
-                b_message_bit = '0' * (self.k - len(b_message_bit)) + b_message_bit
+                b_message_bit = b_message_bit + '0' * (self.k - len(b_message_bit))
                 value_new_int = value_old_bin[:8-self.k] + b_message_bit
                 value_new = int(value_new_int, 2)
                 index += self.k

@@ -173,10 +173,9 @@ class LSB_SINE(steganographyAlgorithm):
         enc_img.save(self.stego_img_path)
         if self.save_metadata:
             file_name = "sineimage.png"
-            available_pixels_list
             sine_array = np.array(list(img.getdata()))
             sine_array[:, 0:3] = 0
-            for pixel_index in  available_pixels_list:
+            for pixel_index in available_pixels_list:
                 sine_array[pixel_index, 0] = 255
 
             sine_array=sine_array.reshape(h, w, n)

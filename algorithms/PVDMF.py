@@ -207,8 +207,7 @@ class PVDMF(steganographyAlgorithm):
                 value_2 = array[index+1][color_value]
                 index += 2
             else:
-                index, color_value, value_1 = self.__get_value__(array, index, color_value)
-                index, color_value, value_2 = self.__get_value__(array, index, color_value)
+                index, color_value, value_1, value_2 = self.__get_values__(array, index, color_value)
 
             block_bits = left_bits + get_hidded_bits(value_1, value_2)
             hidden_bits = [block_bits[i:i+8] for i in range(0, len(block_bits), 8)]
@@ -258,16 +257,15 @@ class PVDMF(steganographyAlgorithm):
         color = self.colors.index(self.color)
         return color, color + 1
 
-    def __get_value__(self, array, index, color_value):
-        if color_value == 2:
-            value = array[index][color_value]
+    def __get_values__(self, array, index, color_value):
+        value_1 = array[index][color_value]
+        value_2 = array[index+1][color_value]
+        color_value += 1
+        if color_value == 3:
             color_value = 0
-            index += 1
-        else:
-            value = array[index][color_value]
-            color_value += 1
+            index += 2
 
-        return index, color_value, value
+        return index, color_value, value_1, value_2
 
     def __calculate_capacity__(self, value):
         for index in range(len(self.type_range)):
@@ -292,22 +290,18 @@ class PVDMF(steganographyAlgorithm):
 
         while b_message_len > b_message_index:
             value_1_index = index
-            value_1_color = color_value
+            value_2_index = index+1
+            used_color = color_value
             if one_color:
-                value_1 = array[index][color_value]
-                value_2_index = index+1
-                value_2_color = color_value
-                value_2 = array[index+1][color_value]
+                value_1 = array[index][used_color]
+                value_2 = array[index+1][used_color]
                 index += 2
             else:
-                index, color_value, value_1 = self.__get_value__(array, index, color_value)
-                value_2_index = index
-                value_2_color = color_value
-                index, color_value, value_2 = self.__get_value__(array, index, color_value)
+                index, color_value, value_1, value_2 = self.__get_values__(array, index, used_color)
 
             value_1, value_2, b_message_index = calculate_new_values(b_message, b_message_index, value_1, value_2)
-            array[value_1_index][value_1_color] = value_1
-            array[value_2_index][value_2_color] = value_2
+            array[value_1_index][used_color] = value_1
+            array[value_2_index][used_color] = value_2
         return array
 
     def __calculate_new_values_type_1__(self, b_message, index, P_1, P_2):

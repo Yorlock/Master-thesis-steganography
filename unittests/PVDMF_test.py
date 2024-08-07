@@ -74,7 +74,7 @@ class Test_PVDMF(unittest.TestCase):
         self.assertTrue(filecmp.cmp(util.get_secret_msg(3), alg.destination_path))
 
     def test_PVDMF_secret_4_type_1_message_too_large(self):
-        alg = PVDMF(end_msg="$t3g0", type=1, color="")
+        alg = PVDMF(end_msg="$t3g0", type=1, color="", estimation=True)
         alg.encode(util.get_carrier_color(2), util.get_secret_msg(4))
         self.assertFalse(alg.is_success)
 
@@ -142,13 +142,16 @@ class Test_PVDMF(unittest.TestCase):
         self.assertTrue(alg.is_success)
         self.assertTrue(filecmp.cmp(util.get_secret_msg(3), alg.destination_path))
 
-    def test_PVDMF_secret_4_type_2_message_too_large(self):
+    def test_PVDMF_secret_4_type_2(self):
         alg = PVDMF(end_msg="$t3g0", type=2, color="")
         alg.encode(util.get_carrier_color(2), util.get_secret_msg(4))
-        self.assertFalse(alg.is_success)
+        self.assertTrue(alg.is_success)
+        alg.decode()
+        self.assertTrue(alg.is_success)
+        self.assertTrue(filecmp.cmp(util.get_secret_msg(4), alg.destination_path))
 
     def test_PVDMF_secret_4_type_2_color_G_message_too_large(self):
-        alg = PVDMF(end_msg="$t3g0", type=2, color="G")
+        alg = PVDMF(end_msg="$t3g0", type=2, color="G", estimation=True)
         alg.encode(util.get_carrier_color(2), util.get_secret_msg(4))
         self.assertFalse(alg.is_success)
 

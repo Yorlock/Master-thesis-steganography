@@ -32,13 +32,12 @@ class PVD_8D(steganographyAlgorithm):
             self.type = type
 
         self.type_range = np.array([[0,7],[8,15],[16,31],[32,63],[64,127],[128,255]])
-        if self.type == 1:
-            self.t = 3
-            self.type_capacity = np.array([3, 3, 3, 3, 4, 4])
-        elif self.type == 2:
+        self.t = 3
+        self.type_capacity = np.array([3, 3, 3, 3, 4, 4])
+        if self.type == 2:
             self.t = 4
             self.type_capacity = np.array([3, 3, 4, 5, 6, 6])
-        else:
+        elif self.type == 3:
             self.t = 1
             self.type_capacity = np.array([1, 1, 1, 1, 1, 1])
         

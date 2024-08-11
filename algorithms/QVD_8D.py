@@ -422,10 +422,12 @@ class QVD_8D(steganographyAlgorithm):
         dec_new = int(middle_value_bit_LSB, 2)
         middle_value_new = int(middle_value_bit[:self.k] + middle_value_bit_LSB, 2)
         dev = dec_old - dec_new
-        if dev > 16 and 0 <= middle_value_new + 32 <= 255:
-            middle_value_new += 32
-        elif dev < -16 and 0 <= middle_value_new - 32 <= 255:
-            middle_value_new -= 32
+        compare_value_1 = 2**(self.k)
+        compare_value_2 = 2**(self.k + 1)
+        if dev > compare_value_1 and 0 <= middle_value_new + compare_value_2 <= 255:
+            middle_value_new += compare_value_2
+        elif dev < -compare_value_1 and 0 <= middle_value_new - compare_value_2 <= 255:
+            middle_value_new -= compare_value_2
 
         for value in color_array:
             value_bit = bin(value)[2:]
@@ -436,10 +438,10 @@ class QVD_8D(steganographyAlgorithm):
             deci_new = int(value_bit_LSB, 2)
             value_new = int(value_bit[:self.k] + value_bit_LSB, 2)
             devi = deci_old - deci_new
-            if devi > 16 and 0 <= value_new + 32 <= 255:
-                value_new += 32
-            elif devi < -16 and 0 <= value_new - 32 <= 255:
-                value_new -= 32
+            if devi > compare_value_1 and 0 <= value_new + compare_value_2 <= 255:
+                value_new += compare_value_2
+            elif devi < -compare_value_1 and 0 <= value_new - compare_value_2 <= 255:
+                value_new -= compare_value_2
             
             color_array_new = np.append(color_array_new, value_new)
             

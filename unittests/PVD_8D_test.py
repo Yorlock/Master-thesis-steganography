@@ -187,8 +187,8 @@ class Test_PVD_8D(unittest.TestCase):
         self.assertTrue(alg.is_success)
         self.assertTrue(filecmp.cmp(util.get_secret_msg(3), alg.destination_path))
 
-    def test_PVD_8D_secret_4_type_0_message_too_large(self):
-        alg = PVD_8D(end_msg="$t3g0", type=0, color="")
+    def test_PVD_8D_secret_4_type_0_color_R_message_too_large(self):
+        alg = PVD_8D(end_msg="$t3g0", type=0, color="R", estimation=True)
         alg.encode(util.get_carrier_color(2), util.get_secret_msg(4))
         self.assertFalse(alg.is_success)
 

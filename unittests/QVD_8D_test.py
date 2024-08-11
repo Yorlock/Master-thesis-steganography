@@ -162,7 +162,7 @@ class Test_QVD_8D(unittest.TestCase):
         self.assertTrue(filecmp.cmp(util.get_secret_msg(5), alg.destination_path))
 
     def test_QVD_8D_secret_4_color_R_message_too_large(self):
-        alg = QVD_8D(end_msg="$t3g0", color='R', type=3, k=4)
+        alg = QVD_8D(end_msg="$t3g0", color='R', type=3, k=4, estimation=True)
         alg.encode(util.get_carrier_color(2), util.get_secret_msg(4))
         self.assertFalse(alg.is_success)
 

@@ -139,7 +139,7 @@ class LSB_SINE(steganographyAlgorithm):
         message += self.end_msg
         b_message = ''.join([format(ord(i), "08b") for i in message])
         req_bits = len(b_message)
-        available_bits, available_pixels_list = self.__calculate_available_bits__(total_pixels, req_bits, w, h)
+        available_bits, available_pixels_list = self.__calculate_available_bits__(total_pixels, w, h, array)
         if req_bits > available_bits:
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
@@ -280,19 +280,21 @@ class LSB_SINE(steganographyAlgorithm):
         # If the result is non-zero, the bit at position n is 1, otherwise, it's 0
         return (number & mask) >> n
 
-    def __calculate_available_bits__(self, total_pixels, req_bits, w, h):
+    def __calculate_available_bits__(self, total_pixels, w, h, array):
         pixel_index = 0
         available_bits = 0
         available_pixels_list = []
         for pixel_index in range(total_pixels):
             j = math.sin((pixel_index * 2 * math.pi / w + 1) * (h - 1) / 2)
             if round(j, self.round_accuracy) != self.sine_phase:
-                pixel_index += 1
                 continue
+            
+            for color in range(3):
+                hide_bits = 1
+                color_MSB_3 = self.__get_MSB_3__(array[pixel_index][color])
+                if color_MSB_3 == '000':
+                    hide_bits = 2
 
-            available_bits += 3
+                available_bits += hide_bits
             available_pixels_list.append(pixel_index)
-            if req_bits <= available_bits:
-                return available_bits, available_pixels_list
-
         return available_bits, available_pixels_list

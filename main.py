@@ -67,7 +67,7 @@ def master_test():
     result_ranked_file_path = "tmp/results_ranked.txt"
     log_file_path = "tmp/log.txt"
 
-    sets_img_msg = [(i, j) for i in range(1, 11) for j in range(1, 6)]
+    sets_img_msg = [(i, j) for i in range(1, 9) for j in range(1, 4)]
 
     algorithms_list = []
     algorithms_list.append([BF(type=1, color=""), BF(type=2, color=""),BF(type=1, color="R"), BF(type=2, color="R"), BF(type=1, color="G"), BF(type=2, color="G"), BF(type=1, color="B"), BF(type=2, color="B")])
@@ -99,8 +99,8 @@ def master_test():
                         print(f"{datetime.datetime.now()} ERROR: Encode {algorithm.error_msg}")
                         continue
 
-                    log_file.write(f"{datetime.datetime.now()} FINISHED: Encode\n")
-                    print(f"{datetime.datetime.now()} FINISHED: Encode")
+                    log_file.write(f"{datetime.datetime.now()} FINISHED: Encode - estimated_capacity: {algorithm.json_content['estimated_capacity']}\n")
+                    print(f"{datetime.datetime.now()} FINISHED: Encode - estimated_capacity: {algorithm.json_content['estimated_capacity']}")
                     algorithm.decode(pipe=None)
                     if not algorithm.is_success:
                         log_file.write(f"{datetime.datetime.now()} ERROR: Decode {algorithm.error_msg}\n")

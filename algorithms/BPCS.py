@@ -99,10 +99,16 @@ class BPCS(steganographyAlgorithm):
         self.stego_img_path = util.get_encode_path(self)
         self.destination_path = util.get_decode_path(self)
         self.metadata_path = util.get_metadata_path(self)
-    
+        img = Image.open(img_path, 'r')
+        width, height = img.size
+        all_pixels = width * height * 3 * 8
         bitplatedir=''
+        capacity_bytes = 1
         if self.save_metadata:
             bitplatedir = self.algorithm_path_dir
+            capacity_bytes = bpcs.capacity_nbytes(img_path, alpha=self.alpha)
+
+        self.json_content["estimated_capacity"] = capacity_bytes * 8 / all_pixels
 
         start_time = time()
 

@@ -133,6 +133,7 @@ class QVD_8D(steganographyAlgorithm):
         
         img = Image.open(img_path, 'r')
         width, height = img.size
+        all_pixels = width * height * 3 * 8
         matrix = np.array(img)
 
         msg_file = open(msg_path,'r')
@@ -149,12 +150,13 @@ class QVD_8D(steganographyAlgorithm):
         message += self.end_msg
         b_message = ''.join([format(ord(i), "08b") for i in message])
         req_bits = len(b_message)
-        available_bits, block_list = self.__calculate_available_bits__(req_bits, matrix, width, height)
-        if self.estimation and req_bits > available_bits:
+        min_available_bits, max_available_bits, block_list = self.__calculate_available_bits__(req_bits, matrix, width, height)
+        if self.estimation and req_bits > min_available_bits:
             self.is_success = False
             self.error_msg = "ERROR: An estimate of the available bits shows that a larger file size is needed. Turn off estimation, but this may cause an application error."
             return
 
+        self.json_content["estimated_capacity"] = (min_available_bits + max_available_bits - 2 * block_list.count) / (2 * all_pixels)
         quotient_block_list, reminder_block_list = self.__calculate_support_block_bits__(block_list)
         enc_block_list = self.__hide_text__(req_bits, block_list, quotient_block_list, reminder_block_list, b_message, n)
         enc_matrix = self.__update_matrix__(matrix, enc_block_list, width, height)
@@ -236,7 +238,8 @@ class QVD_8D(steganographyAlgorithm):
         return message
 
     def __calculate_available_bits__(self, req_bits, matrix, cols, rows):
-        available_bits = 0
+        min_available_bits = 0
+        max_available_bits = 0
         blocks = []
         num_blocks_row = rows // 3
         num_blocks_col = cols // 3
@@ -249,18 +252,22 @@ class QVD_8D(steganographyAlgorithm):
         else:
             min_bits = 1 + 2 * 8 + 8 * self.type_capacity[0] * color_number
 
+        if 1 + 2 * 8 + 8 * self.type_capacity[len(self.type_capacity) - 1] * color_number < (self.k - 1 + self.k * 8) * color_number:
+            max_bits = (self.k - 1 + self.k * 8) * color_number
+        else:
+            max_bits = 1 + 2 * 8 + 8 * self.type_capacity[len(self.type_capacity) - 1] * color_number
+
         for i in range(num_blocks_row):
             for j in range(num_blocks_col):
                 start_row = i * 3
                 start_col = j * 3
                 block = matrix[start_row:start_row+3, start_col:start_col+3]
                 block = np.array(block, dtype='int')
-                available_bits += min_bits
+                min_available_bits += min_bits
+                max_available_bits += max_bits
                 blocks.append(block)
-                if self.estimation and req_bits <= available_bits:
-                    return available_bits, blocks
 
-        return available_bits, blocks
+        return min_available_bits, max_available_bits, blocks
 
     def __get_pixel_value__(self, pixel, num_bits):
         bits = ''

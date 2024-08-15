@@ -26,7 +26,7 @@ class metrics_calculator:
         self.timeout = 10
         self.seed = 23 #np.random.randint(1, 1000)
         self.result_file = open(self.result_file_path, "w")
-        self.result_file.write("Name;ET;DT;MSE;PSNR;QI;SSIM;AEC;BPB;ABCPB;DM\n")
+        self.result_file.write("Name;ET;DT;EC;MSE;PSNR;QI;SSIM;AEC;BPB;ABCPB;DM\n")
 
     
     def setup(self, algorithm, sample_image_path, sample_message_path):
@@ -63,6 +63,7 @@ class metrics_calculator:
 
         ET = self.algorithm.json_content['milli_sec_elapsed_encode']
         DT = self.algorithm.json_content['milli_sec_elapsed_decode']
+        EC = self.algorithm.json_content['estimated_capacity']
         MSE = self.__MSE__()
         PSNR = self.__PSNR__()
         QI = self.__quality_index__()
@@ -72,7 +73,7 @@ class metrics_calculator:
         ABCPB = self.__average_bits_changed_per_byte__()
         DM = self.__calculate_destroyed_message__()
 
-        self.result_file.write(f"{Name};{ET};{DT};{MSE};{PSNR};{QI};{SSIM};{AEC};{BPB};{ABCPB};{DM}\n")
+        self.result_file.write(f"{Name};{ET};{DT};{EC};{MSE};{PSNR};{QI};{SSIM};{AEC};{BPB};{ABCPB};{DM}\n")
         self.log_file.write(f"{datetime.datetime.now()} SUCCESS: Run\n")
         print(f"{datetime.datetime.now()} SUCCESS: Run")
 
@@ -92,7 +93,7 @@ class metrics_calculator:
             results_list[i][-1] = results_list[i][-1][:-1]
 
         df = pd.DataFrame(results_list, columns = labels.split(";"))
-        df[["ET","DT","MSE","PSNR","QI","SSIM","AEC","BPB","ABCPB","DM"]] = df[["ET","DT","MSE","PSNR","QI","SSIM","AEC","BPB","ABCPB","DM"]].astype(float)
+        df[["ET","DT","EC","MSE","PSNR","QI","SSIM","AEC","BPB","ABCPB","DM"]] = df[["ET","DT","EC","MSE","PSNR","QI","SSIM","AEC","BPB","ABCPB","DM"]].astype(float)
         
         for column_name, column in df.items():
             if column_name == "Name":

@@ -121,6 +121,7 @@ class LSB_SINE(steganographyAlgorithm):
         
         img = Image.open(img_path, 'r')
         w, h = img.size
+        all_pixels = w * h * 3 * 8
         array = np.array(list(img.getdata()))
 
         msg_file = open(msg_path,'r')
@@ -144,6 +145,7 @@ class LSB_SINE(steganographyAlgorithm):
             self.error_msg = "ERROR: Need larger file size."
             return
 
+        self.json_content["estimated_capacity"] =  available_bits / all_pixels
         bit_embedded = 0
         pixel_index = 0
         for pixel_index in available_pixels_list:

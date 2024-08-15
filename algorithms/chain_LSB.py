@@ -101,6 +101,7 @@ class chain_LSB(steganographyAlgorithm):
     
         img = Image.open(img_path, 'r')
         width, height = img.size
+        all_pixels = width * height * 3 * 8
         array = np.array(list(img.getdata()))
 
         msg_file = open(msg_path,'r')
@@ -135,6 +136,7 @@ class chain_LSB(steganographyAlgorithm):
             self.error_msg = "ERROR: Need larger file size or larger k."
             return
 
+        self.json_content["estimated_capacity"] =  possible_chunks * self.k / all_pixels
         array = self.__hide_text__(pointer_length, b_message, req_chunks, possible_chunks, array)
         
         end_time = time()

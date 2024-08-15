@@ -71,7 +71,7 @@ def master_test():
 
     algorithms_list = []
     algorithms_list.append([BF(type=1, color=""), BF(type=2, color=""),BF(type=1, color="R"), BF(type=2, color="R"), BF(type=1, color="G"), BF(type=2, color="G"), BF(type=1, color="B"), BF(type=2, color="B")])
-    algorithms_list.append([BPCS()])
+    algorithms_list.append([BPCS(alpha=0.4), BPCS(alpha=0.45), BPCS(alpha=0.5)])
     algorithms_list.append([chain_LSB(), chain_LSB(k=1000), chain_LSB(k=2000)])
     algorithms_list.append([LSB_EOM(k=1), LSB_EOM(k=2), LSB_EOM(k=3), LSB_EOM(k=4), LSB_EOM(k=5)])
     algorithms_list.append([LSB_PF(password="12345", color="R"), LSB_PF(password="12345", color="G"), LSB_PF(password="12345", color="B"), LSB_PF(password="ABCDE", color="R"), LSB_PF(password="ABCDE", color="G"), LSB_PF(password="ABCDE", color="B")])

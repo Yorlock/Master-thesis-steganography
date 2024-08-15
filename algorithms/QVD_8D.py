@@ -32,13 +32,13 @@ class QVD_8D(steganographyAlgorithm):
         self.type = 1
         self.type_capacity = np.array([3, 3, 4, 5])
         if type == 2:
-            self.type = 0
+            self.type = 2
             self.type_capacity = np.array([1, 1, 1, 1])
         elif type == 3:
-            self.type = 1
+            self.type = 3
             self.type_capacity = np.array([2, 2, 3, 4])
         elif type == 4:
-            self.type = 2
+            self.type = 4
             self.type_capacity = np.array([1, 1, 2, 3])
             
         
@@ -156,7 +156,7 @@ class QVD_8D(steganographyAlgorithm):
             self.error_msg = "ERROR: An estimate of the available bits shows that a larger file size is needed. Turn off estimation, but this may cause an application error."
             return
 
-        self.json_content["estimated_capacity"] = (min_available_bits + max_available_bits - 2 * block_list.count) / (2 * all_pixels)
+        self.json_content["estimated_capacity"] = (min_available_bits + max_available_bits - 2 * len(block_list)) / (2 * all_pixels)
         quotient_block_list, reminder_block_list = self.__calculate_support_block_bits__(block_list)
         enc_block_list = self.__hide_text__(req_bits, block_list, quotient_block_list, reminder_block_list, b_message, n)
         enc_matrix = self.__update_matrix__(matrix, enc_block_list, width, height)

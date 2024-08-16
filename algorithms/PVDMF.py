@@ -121,6 +121,7 @@ class PVDMF(steganographyAlgorithm):
         
         img = Image.open(img_path, 'r')
         width, height = img.size
+        all_pixels = width * height * 3 * 8
         array = np.array(list(img.getdata()))
         
         msg_file = open(msg_path,'r')
@@ -138,17 +139,20 @@ class PVDMF(steganographyAlgorithm):
         message += self.end_msg
         b_message = ''.join([format(ord(i), "08b") for i in message])
         min_type_capacity = self.type_capacity[0]
+        max_type_capacity = self.type_capacity[len(self.type_capacity) - 1]
         color_number = 1
         if self.color == "":
             color_number = 3
 
         req_bits = len(b_message)
-        available_bits = total_pixels // 2 * color_number * min_type_capacity
-        if self.estimation and req_bits > available_bits:
+        min_available_bits = total_pixels // 2 * color_number * min_type_capacity
+        if self.estimation and req_bits > min_available_bits:
             self.is_success = False
             self.error_msg = "ERROR: An estimate of the available bits shows that a larger file size is needed. Turn off estimation, but this may cause an application error."
             return
 
+        max_available_bits = total_pixels // 2 * color_number * max_type_capacity
+        self.json_content["estimated_capacity"] =  (min_available_bits + max_available_bits) / ( 2 * all_pixels)
         array = self.__hide_text__(array, b_message)
 
         end_time = time()

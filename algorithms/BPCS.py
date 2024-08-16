@@ -8,12 +8,13 @@ from algorithms.steganographyAlgorithm import steganographyAlgorithm
 import util
 
 class BPCS(steganographyAlgorithm):
-    def __init__(self, alpha=0.45, save_metadata=False):
+    def __init__(self, alpha=0.45, save_metadata=False, estimation=False):
         self.msg_extension = ".txt"
         self.stego_extension = ".png"
         self.alpha = alpha
         self.is_success = False
         self.save_metadata = save_metadata
+        self.estimation = estimation
         self.error_msg = ""
         self.timeout = 45
         self.json_content = {"algorithm":"BPCS", "settings": {"alpha":self.alpha}}
@@ -99,10 +100,18 @@ class BPCS(steganographyAlgorithm):
         self.stego_img_path = util.get_encode_path(self)
         self.destination_path = util.get_decode_path(self)
         self.metadata_path = util.get_metadata_path(self)
-    
+        img = Image.open(img_path, 'r')
+        width, height = img.size
+        all_pixels = width * height * 3 * 8
         bitplatedir=''
         if self.save_metadata:
             bitplatedir = self.algorithm_path_dir
+        
+        if self.estimation:
+            capacity_bytes = bpcs.capacity_nbytes(img_path, alpha=self.alpha)
+            self.json_content["estimated_capacity"] = capacity_bytes * 8 / all_pixels
+        else:
+            self.json_content["estimated_capacity"] = 0
 
         start_time = time()
 

@@ -116,6 +116,7 @@ class BF(steganographyAlgorithm):
     
         img = Image.open(img_path, 'r')
         width, height = img.size
+        all_pixels = width * height * 3 * 8
         array = np.array(list(img.getdata()))
         
         msg_file = open(msg_path,'r')
@@ -153,6 +154,7 @@ class BF(steganographyAlgorithm):
             self.error_msg = "ERROR: Need larger file size."
             return
 
+        self.json_content["estimated_capacity"] =  available_blocks * color_number * block_number / all_pixels
         self.__calculate_location_map__(total_pixels, array)
         array = self.__hide_text__(array, b_message)
         

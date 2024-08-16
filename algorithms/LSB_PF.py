@@ -114,6 +114,7 @@ class LSB_PF(steganographyAlgorithm):
         
         img = Image.open(img_path, 'r')
         width, height = img.size
+        all_pixels = width * height * 3 * 8
         array = np.array(list(img.getdata()))
         
         msg_file = open(msg_path,'r')
@@ -133,13 +134,18 @@ class LSB_PF(steganographyAlgorithm):
             n = 4
 
         total_pixels = array.size//n
-        available_bits, pixels_index  = self.__get_MSB_filter__(array, total_pixels)
+        available_pixels, pixels_index  = self.__get_MSB_filter__(array, total_pixels)
 
-        if req_bits > available_bits:
+        color_number = 1
+        if self.color == "":
+            color_number = 3
+
+        if req_bits > available_pixels:
             self.is_success = False
             self.error_msg = "ERROR: Need larger file size."
             return
 
+        self.json_content["estimated_capacity"] =  available_pixels * color_number / all_pixels
         password_bits = ''.join([format(ord(i), "08b") for i in self.password])
         password_blocks = [int(password_bits[i:i+3], 2) for i in range(0, len(password_bits), 3)]
         blocks_len = len(password_blocks)

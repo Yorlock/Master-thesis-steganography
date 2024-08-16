@@ -105,6 +105,7 @@ class LSB_SOM(steganographyAlgorithm):
         
         img = Image.open(img_path, 'r')
         width, height = img.size
+        all_pixels = width * height * 3 * 8
         array = np.array(list(img.getdata()))
         
         msg_file = open(msg_path,'r')
@@ -134,6 +135,7 @@ class LSB_SOM(steganographyAlgorithm):
             self.error_msg = "ERROR: Need larger file size."
             return
 
+        self.json_content["estimated_capacity"] =  available_bits / all_pixels
         array = self.__hide_text__(total_pixels, req_bits, array, b_message)
         
         end_time = time()

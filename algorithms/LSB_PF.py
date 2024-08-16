@@ -18,11 +18,13 @@ class LSB_PF(steganographyAlgorithm):
         self.is_success = False
         self.error_msg = ""
         self.password = password
-        self.colors = ['R', 'G', 'B']
         self.end_msg = end_msg
+        self.colors = ['R', 'G', 'B']
         if color in self.colors:
             self.color = color
-        
+        else:
+            self.color = ""
+
         json_color = self.color
         if json_color == "":
             json_color = "RGB"
@@ -150,7 +152,13 @@ class LSB_PF(steganographyAlgorithm):
         password_blocks = [int(password_bits[i:i+3], 2) for i in range(0, len(password_bits), 3)]
         blocks_len = len(password_blocks)
 
-        change_color = self.colors.index(self.color)
+        increment_color = False
+        if self.color == "":
+            change_color = 0
+            increment_color = True
+        else:
+            change_color = self.colors.index(self.color)
+        
         index_block = 0
         index_pixel = 0
         for bit in b_message:
@@ -165,7 +173,13 @@ class LSB_PF(steganographyAlgorithm):
                         new_value = (block_value ^ int(bit))
                     
                     array[index_pixel][change_color] = (array[index_pixel][change_color] & 254) + new_value
-                    index_pixel += 1
+                    if not increment_color:
+                        index_pixel += 1
+                    else:
+                        change_color += 1
+                        if change_color > 2:
+                            change_color = 0
+                            index_pixel += 1
                     break
                 index_pixel += 1
 
@@ -205,36 +219,37 @@ class LSB_PF(steganographyAlgorithm):
         enc_message = ""
         hidden_bits = ""
         index_block = 0
-        change_color = self.colors.index(self.color)
+        color_init, color_end = self.__get_color_range__()
         end_msg_base64 = base64.b64encode(str.encode(self.end_msg)).decode("utf-8")
         is_end = False
         for p in range(total_pixels):
-            if is_end:
-                break
-            
-            if not pixels_index[p]:
-                continue
-
-            block = password_blocks[index_block % blocks_len]
-            index_block += 1
-            hide_value = self.get_bit_value(array[p][change_color], block)
-            if block == 0:
-                hidden_bits += str(hide_value)
-            else:
-                LSB_value = self.get_bit_value(array[p][change_color], 0)
-                if LSB_value == 1:
-                    hidden_bits += str(self.__reverse_value__(hide_value))
-                else:
-                    hidden_bits += str(hide_value)
-
-            if len(hidden_bits) >= 8: 
-                if enc_message[-len(end_msg_base64):] == end_msg_base64:
-                    is_end = True
+            for color in range(color_init, color_end):
+                if is_end:
                     break
-                else:
-                    enc_message += chr(int(hidden_bits, 2))
                 
-                hidden_bits = ''
+                if not pixels_index[p]:
+                    continue
+
+                block = password_blocks[index_block % blocks_len]
+                index_block += 1
+                hide_value = self.get_bit_value(array[p][color], block)
+                if block == 0:
+                    hidden_bits += str(hide_value)
+                else:
+                    LSB_value = self.get_bit_value(array[p][color], 0)
+                    if LSB_value == 1:
+                        hidden_bits += str(self.__reverse_value__(hide_value))
+                    else:
+                        hidden_bits += str(hide_value)
+
+                if len(hidden_bits) >= 8: 
+                    if enc_message[-len(end_msg_base64):] == end_msg_base64:
+                        is_end = True
+                        break
+                    else:
+                        enc_message += chr(int(hidden_bits, 2))
+                    
+                    hidden_bits = ''
 
                         
         if end_msg_base64 not in enc_message:
@@ -295,6 +310,13 @@ class LSB_PF(steganographyAlgorithm):
             return '0'
         return '1'
     
+    def __get_color_range__(self):
+        if self.color == "":
+            return 0, 3
+
+        color = self.colors.index(self.color)
+        return color, color + 1
+
 class AESCipher(object):
 
     def __init__(self, key):

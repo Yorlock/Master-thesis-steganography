@@ -283,7 +283,6 @@ class PVD_8D(steganographyAlgorithm):
         color = self.colors.index(self.color)
         return color, color + 1
 
-
     def __calculate_capacity__(self, value):
         for index in range(len(self.type_range)):
             if value >= self.type_range[index][0] and value <= self.type_range[index][1]:

@@ -25,6 +25,14 @@ class Test_LSB_PF(unittest.TestCase):
         self.assertTrue(alg.is_success)
         self.assertTrue(filecmp.cmp(util.get_secret_msg(1), alg.destination_path))
 
+    def test_LSB_PF_secret_1_color_RGB(self):
+        alg = LSB_PF(password='12345', color='', end_msg="$t3g0")
+        alg.encode(util.get_carrier_color(2), util.get_secret_msg(1))
+        self.assertTrue(alg.is_success)
+        alg.decode()
+        self.assertTrue(alg.is_success)
+        self.assertTrue(filecmp.cmp(util.get_secret_msg(1), alg.destination_path))
+
     def test_LSB_PF_secret_1_color_R(self):
         alg = LSB_PF(password='12345', color='R', end_msg="$t3g0")
         alg.encode(util.get_carrier_color(2), util.get_secret_msg(1))
@@ -43,6 +51,14 @@ class Test_LSB_PF(unittest.TestCase):
 
     def test_LSB_PF_secret_2(self):
         alg = LSB_PF(password='12345', color='B', end_msg="$t3g0")
+        alg.encode(util.get_carrier_color(2), util.get_secret_msg(2))
+        self.assertTrue(alg.is_success)
+        alg.decode()
+        self.assertTrue(alg.is_success)
+        self.assertTrue(filecmp.cmp(util.get_secret_msg(2), alg.destination_path))
+    
+    def test_LSB_PF_secret_2_color_RGB(self):
+        alg = LSB_PF(password='12345', color='', end_msg="$t3g0")
         alg.encode(util.get_carrier_color(2), util.get_secret_msg(2))
         self.assertTrue(alg.is_success)
         alg.decode()

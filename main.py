@@ -74,7 +74,7 @@ def master_test():
     algorithms_list.append([BPCS(alpha=0.42), BPCS(alpha=0.45), BPCS(alpha=0.5)])
     algorithms_list.append([chain_LSB(), chain_LSB(k=1000), chain_LSB(k=2000)])
     algorithms_list.append([LSB_EOM(k=1), LSB_EOM(k=2), LSB_EOM(k=3), LSB_EOM(k=4), LSB_EOM(k=5)])
-    algorithms_list.append([LSB_PF(password="12345", color="R"), LSB_PF(password="12345", color="G"), LSB_PF(password="12345", color="B"), LSB_PF(password="ABCDE", color="R"), LSB_PF(password="ABCDE", color="G"), LSB_PF(password="ABCDE", color="B")])
+    algorithms_list.append([LSB_PF(password="12345", color=""), LSB_PF(password="12345", color="R"), LSB_PF(password="12345", color="G"), LSB_PF(password="12345", color="B"), LSB_PF(password="ABCDE", color=""), LSB_PF(password="ABCDE", color="R"), LSB_PF(password="ABCDE", color="G"), LSB_PF(password="ABCDE", color="B")])
     algorithms_list.append([LSB_SINE(round_accuracy=1, sine_phase=1.0), LSB_SINE(round_accuracy=2, sine_phase=1.0), LSB_SINE(round_accuracy=1, sine_phase=0.9), LSB_SINE(round_accuracy=2, sine_phase=0.9), LSB_SINE(round_accuracy=1, sine_phase=-1.0), LSB_SINE(round_accuracy=2, sine_phase=-1.0), LSB_SINE(round_accuracy=1, sine_phase=0.0), LSB_SINE(round_accuracy=2, sine_phase=0.0)])
     algorithms_list.append([LSB_SOM(k=1), LSB_SOM(k=2), LSB_SOM(k=3), LSB_SOM(k=4), LSB_SOM(k=5)]) 
     algorithms_list.append([n_RMBR(color="", n=1), n_RMBR(color="", n=2), n_RMBR(color="", n=3), n_RMBR(color="", n=4), n_RMBR(color="R", n=1), n_RMBR(color="R", n=2), n_RMBR(color="R", n=3), n_RMBR(color="R", n=4), n_RMBR(color="G", n=1), n_RMBR(color="G", n=2), n_RMBR(color="G", n=3), n_RMBR(color="G", n=4), n_RMBR(color="B", n=1), n_RMBR(color="B", n=2), n_RMBR(color="B", n=3), n_RMBR(color="", n=4)])

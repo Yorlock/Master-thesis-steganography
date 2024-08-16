@@ -25,7 +25,7 @@ class PVD_8D(steganographyAlgorithm):
         if not isinstance(type, int):
             self.type = 1
             self.error_msg += "Parameter type was set to 1."
-        elif type != 0 and type != 1 and type != 2:
+        elif type != 1 and type != 2 and type != 3 and type != 4:
             self.type = 1
             self.error_msg += "Parameter type was set to 1."
         else:
@@ -40,6 +40,9 @@ class PVD_8D(steganographyAlgorithm):
         elif self.type == 3:
             self.t = 1
             self.type_capacity = np.array([1, 1, 1, 1, 1, 1])
+        elif self.type == 4:
+            self.t = 1
+            self.type_capacity = np.array([1, 1, 1, 1, 2, 2])
         
         json_color = self.color
         if json_color == "":

@@ -154,7 +154,7 @@ class BF(steganographyAlgorithm):
             self.error_msg = "ERROR: Need larger file size."
             return
 
-        self.json_content["estimated_capacity"] =  available_blocks * color_number * block_number / all_pixels
+        self.json_content["estimated_capacity"] =  available_blocks * block_number / all_pixels
         self.__calculate_location_map__(total_pixels, array)
         array = self.__hide_text__(array, b_message)
         
